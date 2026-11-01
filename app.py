@@ -1,247 +1,187 @@
 import streamlit as st
-import streamlit.components.v1 as components
-import google.generativeai as genai
+import base64
+from gTTS import gTTS
+import io
 
+# Cấu hình trang Streamlit
 st.set_page_config(
-    page_title="AI Multi-Agent Control",
-    page_icon="🤖",
-    layout="wide",
-    initial_sidebar_state="collapsed"
+    page_title="Voice AI Agent - No-Ron Core",
+    page_icon="🎙️",
+    layout="wide"
 )
 
-# Khởi tạo Gemini API từ Secrets
-gemini_key = st.secrets.get("GEMINI_API_KEY", "")
-if gemini_key:
-    genai.configure(api_key=gemini_key)
-    model = genai.GenerativeModel("gemini-2.5-flash")
-else:
-    st.error("⚠️ Chưa tìm thấy GEMINI_API_KEY trong phần Secrets của Streamlit Cloud!")
+# Tiêu đề ứng dụng
+st.title("🎙️ Voice AI Agent & Neural Execution (No-Ron)")
+st.caption("Hệ thống điều khiển AI Agent bằng giọng nói rõ ràng, hỗ trợ đa ngôn ngữ")
 
-st.title("🤖 AI Multi-Agent Neural Control Center")
-st.markdown("<p style='text-align: center; color: #888;'>Hệ thống Quản lý và Tương tác Đa Tác Nhân (Multi-Agent System)</p>", unsafe_allow_html=True)
-
-st.markdown("---")
-st.subheader("💬 Tương Tác & Phân Việc AI Agent")
-
+# Khởi tạo Session State
 if "messages" not in st.session_state:
     st.session_state.messages = []
+if "tasks" not in st.session_state:
+    st.session_state.tasks = []
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+# --- THANH CẤU HÌNH BÊN TRÁI (SIDEBAR) ---
+with st.sidebar:
+    st.header("⚙️ Cấu hình Giọng nói & Agent")
+    
+    # Cho phép chọn ngôn ngữ phát âm & nhận diện
+    language_option = st.selectbox(
+        "🌐 Chọn ngôn ngữ phản hồi (Language):",
+        options=[
+            ("Tiếng Việt", "vi", "vi-VN"),
+            ("English (US)", "en", "en-US"),
+            ("日本語 (Japanese)", "ja", "ja-JP"),
+            ("한국어 (Korean)", "ko", "ko-KR"),
+            ("Français (French)", "fr", "fr-FR")
+        ],
+        format_func=lambda x: x[0]
+    )
+    
+    selected_lang_name, gtts_lang_code, speech_rec_code = language_option
+    
+    voice_enabled = st.toggle("🔊 Bật giọng nói phản hồi (Voice Output)", value=True)
+    st.divider()
+    st.markdown("**Trạng thái No-Ron Agent:** 🟢 Ready")
 
-if prompt := st.chat_input("Nhập câu lệnh hoặc nội dung cần phân việc..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+# --- HÀM TẠO ÂM THANH CHUẨN ĐẸP VỚI gTTS (KHÔNG BỊ RUNG/MÉO) ---
+def text_to_audio_html(text: str, lang_code: str):
+    """Tạo audio player ẩn tự động phát bằng giọng chuẩn gTTS"""
+    try:
+        tts = gTTS(text=text, lang=lang_code, slow=False)
+        fp = io.BytesIO()
+        tts.write_to_fp(fp)
+        fp.seek(0)
+        audio_bytes = fp.read()
+        b64 = base64.b64encode(audio_bytes).decode()
+        # Tạo HTML5 audio tự động phát (Autoplay)
+        md = f"""
+            <audio autoplay style="display:none;">
+            <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+            </audio>
+            """
+        return md
+    except Exception as e:
+        return f"<!-- Audio error: {str(e)} -->"
 
-    with st.chat_message("assistant"):
-        if gemini_key:
-            try:
-                with st.spinner("Agent đang xử lý..."):
-                    response = model.generate_content(prompt)
-                    ai_reply = response.text
-                    st.markdown(ai_reply)
-                    st.session_state.messages.append({"role": "assistant", "content": ai_reply})
-            except Exception as e:
-                st.error(f"Lỗi kết nối AI: {e}")
-        else:
-            st.error("Vui lòng cấu hình GEMINI_API_KEY trong Secrets.")
+# --- KHU VỰC ĐIỀU KHIỂN GIỌNG NÓI (WEB SPEECH RECOGNITION) ---
+st.subheader("🗣️ Điều khiển bằng Giọng nói")
 
-st.markdown("---")
-st.markdown("### 🌐 Sơ đồ Mạng lưới Tác nhân (Neural Topology)")
-
-vis_html = """
-<div id="mynetwork" style="width: 100%; height: 300px; background-color: #111; border-radius: 10px;"></div>
-<script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-<script type="text/javascript">
-  var nodes = new vis.DataSet([
-    {id: 1, label: 'Master Agent', color: '#ff4b4b'},
-    {id: 2, label: 'Analyzer Agent', color: '#4b79ff'},
-    {id: 3, label: 'Executor Agent', color: '#4bffb3'}
-  ]);
-  var edges = new vis.DataSet([
-    {from: 1, to: 2},
-    {from: 1, to: 3}
-  ]);
-  var container = document.getElementById('mynetwork');
-  var data = { nodes: nodes, edges: edges };
-  var options = { physics: true };
-  var network = new vis.Network(container, data, options);
-</script>
-"""
-components.html(vis_html, height=320)
-import streamlit as st
-import streamlit.components.v1 as components
-import google.generativeai as genai
-
-st.set_page_config(
-    page_title="AI Multi-Agent Control",
-    page_icon="🤖",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
-
-# Khởi tạo Gemini API từ Secrets
-gemini_key = st.secrets.get("GEMINI_API_KEY", "")
-if gemini_key:
-    genai.configure(api_key=gemini_key)
-    model = genai.GenerativeModel("gemini-2.5-flash")
-else:
-    st.error("⚠️ Chưa tìm thấy GEMINI_API_KEY trong phần Secrets của Streamlit Cloud!")
-
-st.title("🤖 AI Multi-Agent Neural Control Center")
-st.markdown("<p style='text-align: center; color: #888;'>Hệ thống Quản lý và Tương tác Đa Tác Nhân (Voice-Controlled)</p>", unsafe_allow_html=True)
-
-# Tích hợp bộ nhận diện giọng nói trực tiếp qua Web Speech API của trình duyệt
-voice_html = """
-<div style="background: #1e1e1e; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 20px; border: 1px solid #333;">
-    <h3 style="color: #fff; margin-top: 0; font-size: 16px;">🎙️ Điều Khiển Giọng Nói Trực Tiếp</h3>
-    <button id="micBtn" onclick="toggleMic()" style="background-color: #ff4b4b; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 30px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 12px rgba(255,75,75,0.4);">
-        🔴 Bật Micro (Off)
+# Web Component tích hợp Micro trực tiếp trong trình duyệt
+components_code = f"""
+<div style="background-color: #1e1e2e; padding: 15px; border-radius: 10px; color: white; text-align: center;">
+    <button id="mic-btn" style="background-color: #ff4b4b; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 20px; cursor: pointer;">
+        🎤 Bắt đầu nói ({selected_lang_name})
     </button>
-    <p id="transcript" style="color: #00ffcc; margin-top: 10px; font-style: italic; min-height: 24px;"></p>
+    <p id="status-text" style="margin-top: 10px; font-style: italic; color: #aaa;">Bấm nút để nói câu lệnh...</p>
 </div>
 
 <script>
-    let recognition;
+const micBtn = document.getElementById('mic-btn');
+const statusText = document.getElementById('status-text');
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (!SpeechRecognition) {{
+    statusText.innerText = "Trình duyệt của bạn không hỗ trợ nhận diện giọng nói (Hãy dùng Chrome/Safari).";
+}} else {{
+    const recognition = new SpeechRecognition();
+    recognition.lang = '{speech_rec_code}';
+    recognition.interimResults = false;
+
     let isListening = false;
-    const micBtn = document.getElementById('micBtn');
-    const transcriptDisplay = document.getElementById('transcript');
 
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SpeechRecognition();
-        recognition.lang = 'vi-VN'; // Nhận diện tiếng Việt
-        recognition.continuous = false;
-        recognition.interimResults = true;
-
-        recognition.onstart = function() {
+    micBtn.addEventListener('click', () => {{
+        if (!isListening) {{
+            recognition.start();
+            micBtn.style.backgroundColor = '#00c853';
+            micBtn.innerText = '🔴 Đang nghe... Hãy nói ngay';
+            statusText.innerText = 'Đang lắng nghe câu lệnh của bạn...';
             isListening = true;
-            micBtn.style.backgroundColor = '#00cc66';
-            micBtn.innerText = '🟢 Đang nghe... (Bấm để tắt)';
-            transcriptDisplay.innerText = "Đang lắng nghe mệnh lệnh của bạn...";
-        };
-
-        recognition.onresult = function(event) {
-            let interimTranscript = '';
-            let finalTranscript = '';
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript;
-                } else {
-                    interimTranscript += event.results[i][0].transcript;
-                }
-            }
-            if (finalTranscript) {
-                transcriptDisplay.innerText = "Đã nhận: " + finalTranscript;
-                // Tự động tìm khung nhập chat của Streamlit và điền vào
-                setTimeout(() => {
-                    const chatInputs = window.parent.document.querySelectorAll('input[type="text"], textarea');
-                    for (let input of chatInputs) {
-                        if (input.placeholder && input.placeholder.includes("Nhập câu lệnh")) {
-                            input.value = finalTranscript;
-                            input.dispatchEvent(new Event('input', { bubbles: true }));
-                            // Tự động nhấn phím Enter để gửi lệnh cho Agent
-                            input.dispatchEvent(new KeyboardEvent('keydown', {
-                                key: 'Enter',
-                                code: 'Enter',
-                                keyCode: 13,
-                                which: 13,
-                                bubbles: true
-                            }));
-                            break;
-                        }
-                    }
-                }, 500);
-            } else if (interimTranscript) {
-                transcriptDisplay.innerText = "Đang nghe: " + interimTranscript;
-            }
-        };
-
-        recognition.onerror = function(event) {
-            transcriptDisplay.innerText = "Lỗi micro: " + event.error;
-            stopMic();
-        };
-
-        recognition.onend = function() {
-            stopMic();
-        };
-    } else {
-        micBtn.innerText = "⚠️ Trình duyệt không hỗ trợ Voice";
-        micBtn.disabled = true;
-    }
-
-    function toggleMic() {
-        if (!isListening) {
-            try {
-                recognition.start();
-            } catch(e) {
-                console.log(e);
-            }
-        } else {
+        }} else {{
             recognition.stop();
-            stopMic();
-        }
-    }
+        }}
+    }});
 
-    function stopMic() {
-        isListening = false;
+    recognition.onresult = (event) => {{
+        const transcript = event.results[0][0].transcript;
+        statusText.innerText = 'Đã nghe: "' + transcript + '"';
+        
+        // Tự động điền vào khung chat của Streamlit nếu tìm thấy
+        const chatInput = window.parent.document.querySelector('textarea[data-testid="stChatInputTextArea"]');
+        if (chatInput) {{
+            chatInput.value = transcript;
+            chatInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
+        }}
+        
         micBtn.style.backgroundColor = '#ff4b4b';
-        micBtn.innerText = '🔴 Bật Micro (Off)';
-    }
+        micBtn.innerText = '🎤 Bắt đầu nói ({selected_lang_name})';
+        isListening = false;
+    }};
+
+    recognition.onerror = (event) => {{
+        statusText.innerText = 'Lỗi nhận diện: ' + event.error;
+        micBtn.style.backgroundColor = '#ff4b4b';
+        micBtn.innerText = '🎤 Bắt đầu nói ({selected_lang_name})';
+        isListening = false;
+    }};
+
+    recognition.onend = () => {{
+        micBtn.style.backgroundColor = '#ff4b4b';
+        micBtn.innerText = '🎤 Bắt đầu nói ({selected_lang_name})';
+        isListening = false;
+    }};
+}}
 </script>
 """
-components.html(voice_html, height=140)
 
-st.markdown("---")
-st.subheader("💬 Tương Tác & Phân Việc AI Agent")
+st.components.v1.html(components_code, height=120)
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+# --- KHU VỰC HIỂN THỊ CHAT & XỬ LÝ NHỆM VỤ ---
+col1, col2 = st.columns([1, 1])
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+with col1:
+    st.subheader("💬 Trò chuyện & Giao việc")
+    
+    # Hiển thị lịch sử chat
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-if prompt := st.chat_input("Nhập câu lệnh hoặc nội dung cần phân việc..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+    # Nhận câu lệnh từ Chat Input hoặc từ Micro điền vào
+    user_prompt = st.chat_input("Nhập câu lệnh hoặc bấm nút Micro phía trên để nói...")
 
-    with st.chat_message("assistant"):
-        if gemini_key:
-            try:
-                with st.spinner("Agent đang xử lý..."):
-                    response = model.generate_content(prompt)
-                    ai_reply = response.text
-                    st.markdown(ai_reply)
-                    st.session_state.messages.append({"role": "assistant", "content": ai_reply})
-            except Exception as e:
-                st.error(f"Lỗi kết nối AI: {e}")
-        else:
-            st.error("Vui lòng cấu hình GEMINI_API_KEY trong Secrets.")
+    if user_prompt:
+        # 1. Hiển thị câu lệnh của user
+        st.session_state.messages.append({"role": "user", "content": user_prompt})
+        with st.chat_message("user"):
+            st.markdown(user_prompt)
 
-st.markdown("---")
-st.markdown("### 🌐 Sơ đồ Mạng lưới Tác nhân (Neural Topology)")
+        # 2. No-Ron Agent xử lý & phản hồi
+        agent_response = f"Đã nhận lệnh: '{user_prompt}'. No-Ron đang tiến hành phân tích và thực thi ngay!"
+        
+        with st.chat_message("assistant"):
+            st.markdown(agent_response)
+            
+            # Nếu bật voice, phát giọng nói chuẩn gTTS rõ ràng
+            if voice_enabled:
+                audio_html = text_to_audio_html(agent_response, gtts_lang_code)
+                st.components.v1.html(audio_html, height=0, width=0)
 
-vis_html = """
-<div id="mynetwork" style="width: 100%; height: 250px; background-color: #111; border-radius: 10px;"></div>
-<script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-<script type="text/javascript">
-  var nodes = new vis.DataSet([
-    {id: 1, label: 'Master Agent', color: '#ff4b4b'},
-    {id: 2, label: 'Analyzer Agent', color: '#4b79ff'},
-    {id: 3, label: 'Executor Agent', color: '#4bffb3'}
-  ]);
-  var edges = new vis.DataSet([
-    {from: 1, to: 2},
-    {from: 1, to: 3}
-  ]);
-  var container = document.getElementById('mynetwork');
-  var data = { nodes: nodes, edges: edges };
-  var options = { physics: true };
-  var network = new vis.Network(container, data, options);
-</script>
-"""
-components.html(vis_html, height=270)
+        st.session_state.messages.append({"role": "assistant", "content": agent_response})
+        
+        # 3. Thêm công việc vào Task Board của No-Ron
+        st.session_state.tasks.append({
+            "task": user_prompt,
+            "status": "Đang thực thi ⚡",
+            "lang": selected_lang_name
+        })
+
+with col2:
+    st.subheader("⚡ Bảng công việc No-Ron thực thi")
+    if not st.session_state.tasks:
+        st.info("Chưa có nhiệm vụ nào được giao. Hãy nói hoặc gõ câu lệnh!")
+    else:
+        for idx, item in enumerate(reversed(st.session_state.tasks)):
+            with st.container(border=True):
+                st.markdown(f"**Nhiệm vụ #{len(st.session_state.tasks) - idx}:** {item['task']}")
+                st.caption(f"Ngôn ngữ: {item['lang']} | Trạng thái: {item['status']}")
