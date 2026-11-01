@@ -15,7 +15,7 @@ st.set_page_config(
 
 # Tiêu đề ứng dụng
 st.title("🎙️ Voice AI Agent & Neural Execution (No-Ron)")
-st.caption("Hệ thống điều khiển AI Agent bằng giọng nói rõ ràng, hỗ trợ đa ngôn ngữ")
+st.caption("Hệ thống điều khiển AI Agent đa tác nhân bằng text, với hỗ trợ giọng nói nếu trình duyệt cho phép")
 
 # Khởi tạo Session State
 if "messages" not in st.session_state:
@@ -25,10 +25,10 @@ if "tasks" not in st.session_state:
 
 # --- THANH CẤU HÌNH BÊN TRÁI (SIDEBAR) ---
 with st.sidebar:
-    st.header("⚙️ Cấu hình Giọng nói & Agent")
+    st.header("⚙️ Cấu hình AI & Giọng nói")
 
     language_option = st.selectbox(
-        "🌐 Chọn ngôn ngữ phản hồi (Language):",
+        "🌐 Chọn ngôn ngữ phản hồi:",
         options=[
             ("Tiếng Việt", "vi", "vi-VN"),
             ("English (US)", "en", "en-US"),
@@ -39,39 +39,103 @@ with st.sidebar:
         format_func=lambda x: x[0]
     )
 
-    selected_lang_name, gtts_lang_code, speech_rec_code = language_option
-    voice_enabled = st.toggle("🔊 Bật giọng nói phản hồi (Voice Output)", value=True)
+    selected_lang_name, gtts_lang_code, _ = language_option
+    voice_enabled = st.toggle("🔊 Bật giọng nói phản hồi (TTS)", value=True)
+    model_name = st.selectbox("🤖 Chọn model Gemini", ["gemini-1.5-flash", "gemini-1.5-pro"]) 
+
     st.divider()
-    st.markdown("**Trạng thái No-Ron Agent:** 🟢 Ready")
+    st.markdown("**Trạng thái No-Ron Agent:** 🟢 Sẵn sàng")
 
 
-# --- HÀM GỌI GOOGLE GEMINI ---
-def get_gemini_response(prompt: str, language: str) -> str:
-    api_key = st.secrets.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
+# --- HÀM CHUNG ---
+def get_api_key():
+    key = st.secrets.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
+    return key
 
+
+# --- HÀM GỌI GEMINI ---
+def call_gemini(prompt: str, model_name: str) -> str:
+    api_key = get_api_key()
     if not api_key:
         return (
             "Chưa có API key Google Gemini. Vui lòng thêm GEMINI_API_KEY vào Streamlit Secrets hoặc biến môi trường. "
-            "Nếu mic đang lỗi, bạn vẫn có thể gõ tay câu lệnh để tiếp tục."
+            "Bạn vẫn có thể gõ tay câu lệnh và tiếp tục dùng app."
         )
 
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-1.5-flash")
-
-        language_instruction = {
-            "Tiếng Việt": "Bạn là No-Ron AI, trả lời tiếng Việt tự nhiên, ngắn gọn nhưng rõ ràng.",
-            "English (US)": "You are No-Ron AI, respond in English naturally and clearly.",
-            "日本語 (Japanese)": "あなたはNo-Ron AIです。自然で明確な日本語で返答してください。",
-            "한국어 (Korean)": "당신은 No-Ron AI입니다. 자연스럽고 명확한 한국어로 답변하세요.",
-            "Français (French)": "Tu es No-Ron AI, réponds en français de manière naturelle et claire."
-        }.get(language, "Bạn là No-Ron AI, trả lời rõ ràng và ngắn gọn.")
-
-        full_prompt = f"{language_instruction}\n\nNgười dùng yêu cầu: {prompt}"
-        response = model.generate_content(full_prompt)
+        model = genai.GenerativeModel(model_name)
+        response = model.generate_content(prompt)
         return response.text.strip()
     except Exception as e:
         return f"No-Ron AI gặp lỗi khi gọi Gemini: {str(e)}"
+
+
+# --- HÀM MULTI-AGENT ---
+def orchestrate_multi_agent(user_prompt: str, language_name: str) -> str:
+    """Mô phỏng multi-agent pipeline: Planner -> Researcher -> Executor."""
+    if language_name == "Tiếng Việt":
+        planner_prompt = f"""
+        Bạn là Planner Agent. Phân tích nhiệm vụ sau và trả về một kế hoạch ngắn gọn gồm:
+        1. Mục tiêu
+        2. Bước thực hiện
+        3. Kết quả mong muốn
+
+        Nhiệm vụ: {user_prompt}
+        """
+        researcher_prompt = f"""
+        Bạn là Researcher Agent. Dựa trên mục tiêu sau, đưa ra ý tưởng, gợi ý hoặc thông tin cần thiết để thực hiện khiêm tốn, rõ ràng.
+
+        Nhiệm vụ: {user_prompt}
+        """
+        executor_prompt = f"""
+        Bạn là Executor Agent. Hãy tạo ra câu trả lời cuối cùng cho người dùng theo ngôn ngữ tiếng Việt, ngắn gọn nhưng hữu ích, phù hợp với nhiệm vụ sau:
+
+        Nhiệm vụ: {user_prompt}
+        """
+    else:
+        planner_prompt = f"""
+        You are the Planner Agent. Analyze the task and return a short plan with:
+        1. Goal
+        2. Steps
+        3. Desired result
+
+        Task: {user_prompt}
+        """
+        researcher_prompt = f"""
+        You are the Researcher Agent. Based on the task, provide concise but useful guidance and ideas.
+
+        Task: {user_prompt}
+        """
+        executor_prompt = f"""
+        You are the Executor Agent. Produce the final answer in English, concise and useful, for this task:
+
+        Task: {user_prompt}
+        """
+
+    planner_text = call_gemini(planner_prompt, model_name)
+    researcher_text = call_gemini(researcher_prompt, model_name)
+
+    final_prompt = f"""
+    Hãy tổng hợp 3 đầu vào sau thành câu trả lời cuối cùng cho người dùng.
+
+    [Planner Agent]
+    {planner_text}
+
+    [Researcher Agent]
+    {researcher_text}
+
+    [User Request]
+    {user_prompt}
+
+    Yêu cầu:
+    - Trả lời theo ngôn ngữ: {language_name}
+    - Giữ cấu trúc rõ ràng
+    - Không dài quá 10-12 câu
+    - Nếu tính chất yêu cầu cần làm nội dung cụ thể, hãy đáp án trực tiếp
+    """
+
+    return call_gemini(final_prompt, model_name)
 
 
 # --- HÀM TẠO ÂM THANH CHUẨN ĐẸP VỚI gTTS ---
@@ -93,113 +157,9 @@ def text_to_audio_html(text: str, lang_code: str):
         return f"<!-- Audio error: {str(e)} -->"
 
 
-# --- KHU VỰC ĐIỀU KHIỂN GIỌNG NÓI ---
+# --- KHU VỰC THÔNG BÁO VỀ MICRO ---
 st.subheader("🗣️ Điều khiển bằng Giọng nói")
-
-warning_msg = """
-<div style="margin-bottom: 12px; color: #ffd166; font-size: 14px;">
-  Nếu Micro không hoạt động trên Safari/iPhone, hãy gõ tay ở ô chat phía dưới. Đây là giới hạn của trình duyệt.
-</div>
-"""
-
-st.markdown(warning_msg, unsafe_allow_html=True)
-
-components_code = f"""
-<div style="background-color: #1e1e2e; padding: 15px; border-radius: 10px; color: white; text-align: center;">
-    <button id="mic-btn" style="background-color: #ff4b4b; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 20px; cursor: pointer;">
-        🎤 Bắt đầu nói ({selected_lang_name})
-    </button>
-    <p id="status-text" style="margin-top: 10px; font-style: italic; color: #aaa;">Bấm nút để nói câu lệnh...</p>
-</div>
-
-<script>
-const micBtn = document.getElementById('mic-btn');
-const statusText = document.getElementById('status-text');
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-if (!SpeechRecognition) {{
-    statusText.innerText = 'Trình duyệt không hỗ trợ nhận diện giọng nói. Hãy gõ tay ở ô chat bên dưới.';
-}} else if (!window.isSecureContext && location.hostname !== 'localhost') {{
-    statusText.innerText = 'Cần HTTPS để dùng Microphone. Nếu đang trên iPhone/Safari, hãy gõ tay hoặc mở trên máy tính.';
-}} else {{
-    const recognition = new SpeechRecognition();
-    recognition.lang = '{speech_rec_code}';
-    recognition.interimResults = false;
-    recognition.continuous = false;
-
-    let isListening = false;
-
-    const tryStart = () => {{
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {{
-            statusText.innerText = 'Microphone không khả dụng trong trình duyệt này. Hãy gõ tay.';
-            return;
-        }}
-
-        navigator.mediaDevices.getUserMedia({{ audio: true }})
-            .then(() => {{
-                recognition.start();
-                micBtn.style.backgroundColor = '#00c853';
-                micBtn.innerText = '🔴 Đang nghe... Hãy nói ngay';
-                statusText.innerText = 'Đang lắng nghe câu lệnh của bạn...';
-                isListening = true;
-            }})
-            .catch((err) => {{
-                console.error(err);
-                statusText.innerText = 'Microphone bị từ chối hoặc không hỗ trợ trên thiết bị này. Hãy gõ tay.';
-                micBtn.style.backgroundColor = '#ff4b4b';
-                micBtn.innerText = '🎤 Bắt đầu nói ({selected_lang_name})';
-                isListening = false;
-            }});
-    };
-
-    micBtn.addEventListener('click', () => {{
-        if (!isListening) {{
-            tryStart();
-        }} else {{
-            recognition.stop();
-        }}
-    }});
-
-    recognition.onresult = (event) => {{
-        const transcript = event.results[0][0].transcript;
-        statusText.innerText = 'Đã nghe: "' + transcript + '"';
-
-        const chatInput = window.parent.document.querySelector('textarea[data-testid="stChatInputTextArea"]');
-        if (chatInput) {{
-            chatInput.value = transcript;
-            chatInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
-        }}
-
-        micBtn.style.backgroundColor = '#ff4b4b';
-        micBtn.innerText = '🎤 Bắt đầu nói ({selected_lang_name})';
-        isListening = false;
-    }};
-
-    recognition.onerror = (event) => {{
-        let msg = 'Lỗi nhận diện: ' + event.error;
-
-        if (event.error === 'service-not-allowed' || event.error === 'not-allowed') {{
-            msg = 'Microphone bị chặn bởi trình duyệt hoặc iPhone. Vui lòng cho phép quyền Microphone hoặc gõ tay.';
-        }} else if (event.error === 'no-speech') {{
-            msg = 'Không nghe thấy giọng nói. Hãy nói rõ hơn hoặc gõ tay.';
-        }}
-
-        statusText.innerText = msg;
-        micBtn.style.backgroundColor = '#ff4b4b';
-        micBtn.innerText = '🎤 Bắt đầu nói ({selected_lang_name})';
-        isListening = false;
-    }};
-
-    recognition.onend = () => {{
-        micBtn.style.backgroundColor = '#ff4b4b';
-        micBtn.innerText = '🎤 Bắt đầu nói ({selected_lang_name})';
-        isListening = false;
-    }};
-}}
-</script>
-"""
-
-st.components.v1.html(components_code, height=120)
+st.info("Microphone trong trình duyệt không luôn hoạt động trên iPhone/Safari. Vì vậy app ưu tiên nhập text và vẫn hỗ trợ TTS nếu trình duyệt cho phép.")
 
 # --- KHU VỰC HIỂN THỊ CHAT & XỬ LÝ NHỆM VỤ ---
 col1, col2 = st.columns([1, 1])
@@ -211,14 +171,15 @@ with col1:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    user_prompt = st.chat_input("Nhập câu lệnh hoặc bấm nút Micro phía trên để nói...")
+    user_prompt = st.chat_input("Nhập câu lệnh hoặc yêu cầu cho No-Ron...")
 
     if user_prompt:
         st.session_state.messages.append({"role": "user", "content": user_prompt})
         with st.chat_message("user"):
             st.markdown(user_prompt)
 
-        agent_response = get_gemini_response(user_prompt, selected_lang_name)
+        with st.spinner("No-Ron đang phân tích và điều phối tác nhân..."):
+            agent_response = orchestrate_multi_agent(user_prompt, selected_lang_name)
 
         with st.chat_message("assistant"):
             st.markdown(agent_response)
@@ -237,9 +198,17 @@ with col1:
 with col2:
     st.subheader("⚡ Bảng công việc No-Ron thực thi")
     if not st.session_state.tasks:
-        st.info("Chưa có nhiệm vụ nào được giao. Hãy nói hoặc gõ câu lệnh!")
+        st.info("Chưa có nhiệm vụ nào. Hãy nhập yêu cầu để bắt đầu!")
     else:
         for idx, item in enumerate(reversed(st.session_state.tasks)):
             with st.container(border=True):
                 st.markdown(f"**Nhiệm vụ #{len(st.session_state.tasks) - idx}:** {item['task']}")
                 st.caption(f"Ngôn ngữ: {item['lang']} | Trạng thái: {item['status']}")
+
+# --- THANH DỰ PHÒNG CHO MICRO (KHÔNG BẮT BUỘC) ---
+with st.expander("🔧 Trợ giúp Micro / nhập tay", expanded=False):
+    st.markdown(
+        "- Nếu micro không hoạt động trên Safari/iPhone, hãy gõ tay câu lệnh ở ô chat dưới cùng.\n"
+        "- App luôn ưu tiên text input để đảm bảo hoạt động ổn định.\n"
+        "- TTS chỉ là chức năng phụ, dùng khi trình duyệt hỗ trợ phát âm thanh."
+    )
