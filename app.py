@@ -1,7 +1,10 @@
-import streamlit as st
+import os
 import base64
-from gtts import gTTS
 import io
+
+import streamlit as st
+from gtts import gTTS
+import google.generativeai as genai
 
 # Cấu hình trang Streamlit
 st.set_page_config(
@@ -23,7 +26,7 @@ if "tasks" not in st.session_state:
 # --- THANH CẤU HÌNH BÊN TRÁI (SIDEBAR) ---
 with st.sidebar:
     st.header("⚙️ Cấu hình Giọng nói & Agent")
-    
+
     # Cho phép chọn ngôn ngữ phát âm & nhận diện
     language_option = st.selectbox(
         "🌐 Chọn ngôn ngữ phản hồi (Language):",
@@ -36,12 +39,44 @@ with st.sidebar:
         ],
         format_func=lambda x: x[0]
     )
-    
+
     selected_lang_name, gtts_lang_code, speech_rec_code = language_option
-    
+
     voice_enabled = st.toggle("🔊 Bật giọng nói phản hồi (Voice Output)", value=True)
     st.divider()
     st.markdown("**Trạng thái No-Ron Agent:** 🟢 Ready")
+
+
+# --- HÀM GỌI GOOGLE GEMINI ---
+def get_gemini_response(prompt: str, language: str) -> str:
+    """Gửi prompt tới Gemini và trả về câu trả lời dạng text."""
+    api_key = st.secrets.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
+
+    if not api_key:
+        return (
+            "Chưa có API key Google Gemini. "
+            "Vui lòng thêm biến môi trường GEMINI_API_KEY hoặc file .streamlit/secrets.toml "
+            "với key: GEMINI_API_KEY = '...'"
+        )
+
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-1.5-flash")
+
+        language_instruction = {
+            "Tiếng Việt": "Bạn là No-Ron AI, trả lời tiếng Việt tự nhiên, ngắn gọn nhưng rõ ràng.",
+            "English (US)": "You are No-Ron AI, respond in English naturally and clearly.",
+            "日本語 (Japanese)": "あなたはNo-Ron AIです。自然で明確な日本語で返答してください。",
+            "한국어 (Korean)": "당신은 No-Ron AI입니다. 자연스럽고 명확한 한국어로 답변하세요.",
+            "Français (French)": "Tu es No-Ron AI, réponds en français de manière naturelle et claire."
+        }.get(language, "Bạn là No-Ron AI, trả lời rõ ràng và ngắn gọn.")
+
+        full_prompt = f"{language_instruction}\n\nNgười dùng yêu cầu: {prompt}"
+        response = model.generate_content(full_prompt)
+        return response.text.strip()
+    except Exception as e:
+        return f"No-Ron AI gặp lỗi khi gọi Gemini: {str(e)}"
+
 
 # --- HÀM TẠO ÂM THANH CHUẨN ĐẸP VỚI gTTS (KHÔNG BỊ RUNG/MÉO) ---
 def text_to_audio_html(text: str, lang_code: str):
@@ -53,7 +88,6 @@ def text_to_audio_html(text: str, lang_code: str):
         fp.seek(0)
         audio_bytes = fp.read()
         b64 = base64.b64encode(audio_bytes).decode()
-        # Tạo HTML5 audio tự động phát (Autoplay)
         md = f"""
             <audio autoplay style="display:none;">
             <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
@@ -62,6 +96,7 @@ def text_to_audio_html(text: str, lang_code: str):
         return md
     except Exception as e:
         return f"<!-- Audio error: {str(e)} -->"
+
 
 # --- KHU VỰC ĐIỀU KHIỂN GIỌNG NÓI (WEB SPEECH RECOGNITION) ---
 st.subheader("🗣️ Điều khiển bằng Giọng nói")
@@ -105,14 +140,13 @@ if (!SpeechRecognition) {{
     recognition.onresult = (event) => {{
         const transcript = event.results[0][0].transcript;
         statusText.innerText = 'Đã nghe: "' + transcript + '"';
-        
-        // Tự động điền vào khung chat của Streamlit nếu tìm thấy
+
         const chatInput = window.parent.document.querySelector('textarea[data-testid="stChatInputTextArea"]');
         if (chatInput) {{
             chatInput.value = transcript;
             chatInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
         }}
-        
+
         micBtn.style.backgroundColor = '#ff4b4b';
         micBtn.innerText = '🎤 Bắt đầu nói ({selected_lang_name})';
         isListening = false;
@@ -141,35 +175,30 @@ col1, col2 = st.columns([1, 1])
 
 with col1:
     st.subheader("💬 Trò chuyện & Giao việc")
-    
+
     # Hiển thị lịch sử chat
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # Nhận câu lệnh từ Chat Input hoặc từ Micro điền vào
     user_prompt = st.chat_input("Nhập câu lệnh hoặc bấm nút Micro phía trên để nói...")
 
     if user_prompt:
-        # 1. Hiển thị câu lệnh của user
         st.session_state.messages.append({"role": "user", "content": user_prompt})
         with st.chat_message("user"):
             st.markdown(user_prompt)
 
-        # 2. No-Ron Agent xử lý & phản hồi
-        agent_response = f"Đã nhận lệnh: '{user_prompt}'. No-Ron đang tiến hành phân tích và thực thi ngay!"
-        
+        agent_response = get_gemini_response(user_prompt, selected_lang_name)
+
         with st.chat_message("assistant"):
             st.markdown(agent_response)
-            
-            # Nếu bật voice, phát giọng nói chuẩn gTTS rõ ràng
+
             if voice_enabled:
                 audio_html = text_to_audio_html(agent_response, gtts_lang_code)
                 st.components.v1.html(audio_html, height=0, width=0)
 
         st.session_state.messages.append({"role": "assistant", "content": agent_response})
-        
-        # 3. Thêm công việc vào Task Board của No-Ron
+
         st.session_state.tasks.append({
             "task": user_prompt,
             "status": "Đang thực thi ⚡",
