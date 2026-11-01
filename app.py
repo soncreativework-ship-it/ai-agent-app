@@ -27,7 +27,6 @@ if "tasks" not in st.session_state:
 with st.sidebar:
     st.header("⚙️ Cấu hình Giọng nói & Agent")
 
-    # Cho phép chọn ngôn ngữ phát âm & nhận diện
     language_option = st.selectbox(
         "🌐 Chọn ngôn ngữ phản hồi (Language):",
         options=[
@@ -41,7 +40,6 @@ with st.sidebar:
     )
 
     selected_lang_name, gtts_lang_code, speech_rec_code = language_option
-
     voice_enabled = st.toggle("🔊 Bật giọng nói phản hồi (Voice Output)", value=True)
     st.divider()
     st.markdown("**Trạng thái No-Ron Agent:** 🟢 Ready")
@@ -49,14 +47,12 @@ with st.sidebar:
 
 # --- HÀM GỌI GOOGLE GEMINI ---
 def get_gemini_response(prompt: str, language: str) -> str:
-    """Gửi prompt tới Gemini và trả về câu trả lời dạng text."""
     api_key = st.secrets.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
 
     if not api_key:
         return (
-            "Chưa có API key Google Gemini. "
-            "Vui lòng thêm biến môi trường GEMINI_API_KEY hoặc file .streamlit/secrets.toml "
-            "với key: GEMINI_API_KEY = '...'"
+            "Chưa có API key Google Gemini. Vui lòng thêm GEMINI_API_KEY vào Streamlit Secrets hoặc biến môi trường. "
+            "Nếu mic đang lỗi, bạn vẫn có thể gõ tay câu lệnh để tiếp tục."
         )
 
     try:
@@ -78,9 +74,8 @@ def get_gemini_response(prompt: str, language: str) -> str:
         return f"No-Ron AI gặp lỗi khi gọi Gemini: {str(e)}"
 
 
-# --- HÀM TẠO ÂM THANH CHUẨN ĐẸP VỚI gTTS (KHÔNG BỊ RUNG/MÉO) ---
+# --- HÀM TẠO ÂM THANH CHUẨN ĐẸP VỚI gTTS ---
 def text_to_audio_html(text: str, lang_code: str):
-    """Tạo audio player ẩn tự động phát bằng giọng chuẩn gTTS"""
     try:
         tts = gTTS(text=text, lang=lang_code, slow=False)
         fp = io.BytesIO()
@@ -98,10 +93,17 @@ def text_to_audio_html(text: str, lang_code: str):
         return f"<!-- Audio error: {str(e)} -->"
 
 
-# --- KHU VỰC ĐIỀU KHIỂN GIỌNG NÓI (WEB SPEECH RECOGNITION) ---
+# --- KHU VỰC ĐIỀU KHIỂN GIỌNG NÓI ---
 st.subheader("🗣️ Điều khiển bằng Giọng nói")
 
-# Web Component tích hợp Micro trực tiếp trong trình duyệt
+warning_msg = """
+<div style="margin-bottom: 12px; color: #ffd166; font-size: 14px;">
+  Nếu Micro không hoạt động trên Safari/iPhone, hãy gõ tay ở ô chat phía dưới. Đây là giới hạn của trình duyệt.
+</div>
+"""
+
+st.markdown(warning_msg, unsafe_allow_html=True)
+
 components_code = f"""
 <div style="background-color: #1e1e2e; padding: 15px; border-radius: 10px; color: white; text-align: center;">
     <button id="mic-btn" style="background-color: #ff4b4b; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 20px; cursor: pointer;">
@@ -113,25 +115,46 @@ components_code = f"""
 <script>
 const micBtn = document.getElementById('mic-btn');
 const statusText = document.getElementById('status-text');
-
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 if (!SpeechRecognition) {{
-    statusText.innerText = "Trình duyệt của bạn không hỗ trợ nhận diện giọng nói (Hãy dùng Chrome/Safari).";
+    statusText.innerText = 'Trình duyệt không hỗ trợ nhận diện giọng nói. Hãy gõ tay ở ô chat bên dưới.';
+}} else if (!window.isSecureContext && location.hostname !== 'localhost') {{
+    statusText.innerText = 'Cần HTTPS để dùng Microphone. Nếu đang trên iPhone/Safari, hãy gõ tay hoặc mở trên máy tính.';
 }} else {{
     const recognition = new SpeechRecognition();
     recognition.lang = '{speech_rec_code}';
     recognition.interimResults = false;
+    recognition.continuous = false;
 
     let isListening = false;
 
+    const tryStart = () => {{
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {{
+            statusText.innerText = 'Microphone không khả dụng trong trình duyệt này. Hãy gõ tay.';
+            return;
+        }}
+
+        navigator.mediaDevices.getUserMedia({{ audio: true }})
+            .then(() => {{
+                recognition.start();
+                micBtn.style.backgroundColor = '#00c853';
+                micBtn.innerText = '🔴 Đang nghe... Hãy nói ngay';
+                statusText.innerText = 'Đang lắng nghe câu lệnh của bạn...';
+                isListening = true;
+            }})
+            .catch((err) => {{
+                console.error(err);
+                statusText.innerText = 'Microphone bị từ chối hoặc không hỗ trợ trên thiết bị này. Hãy gõ tay.';
+                micBtn.style.backgroundColor = '#ff4b4b';
+                micBtn.innerText = '🎤 Bắt đầu nói ({selected_lang_name})';
+                isListening = false;
+            }});
+    };
+
     micBtn.addEventListener('click', () => {{
         if (!isListening) {{
-            recognition.start();
-            micBtn.style.backgroundColor = '#00c853';
-            micBtn.innerText = '🔴 Đang nghe... Hãy nói ngay';
-            statusText.innerText = 'Đang lắng nghe câu lệnh của bạn...';
-            isListening = true;
+            tryStart();
         }} else {{
             recognition.stop();
         }}
@@ -153,7 +176,15 @@ if (!SpeechRecognition) {{
     }};
 
     recognition.onerror = (event) => {{
-        statusText.innerText = 'Lỗi nhận diện: ' + event.error;
+        let msg = 'Lỗi nhận diện: ' + event.error;
+
+        if (event.error === 'service-not-allowed' || event.error === 'not-allowed') {{
+            msg = 'Microphone bị chặn bởi trình duyệt hoặc iPhone. Vui lòng cho phép quyền Microphone hoặc gõ tay.';
+        }} else if (event.error === 'no-speech') {{
+            msg = 'Không nghe thấy giọng nói. Hãy nói rõ hơn hoặc gõ tay.';
+        }}
+
+        statusText.innerText = msg;
         micBtn.style.backgroundColor = '#ff4b4b';
         micBtn.innerText = '🎤 Bắt đầu nói ({selected_lang_name})';
         isListening = false;
@@ -176,7 +207,6 @@ col1, col2 = st.columns([1, 1])
 with col1:
     st.subheader("💬 Trò chuyện & Giao việc")
 
-    # Hiển thị lịch sử chat
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
@@ -192,7 +222,6 @@ with col1:
 
         with st.chat_message("assistant"):
             st.markdown(agent_response)
-
             if voice_enabled:
                 audio_html = text_to_audio_html(agent_response, gtts_lang_code)
                 st.components.v1.html(audio_html, height=0, width=0)
