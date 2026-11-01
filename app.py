@@ -11,10 +11,10 @@ try:
 except Exception:
     PdfReader = None
 
-GOOGLE_MODEL_CANDIDATES = [
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-lite",
+FALLBACK_MODELS = [
     "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-2.0-flash",
     "gemini-1.5-flash",
     "gemini-1.5-pro",
 ]
@@ -150,30 +150,42 @@ def get_api_key():
     return st.secrets.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
 
 
-def resolve_best_available_model():
+def get_available_models():
     api_key = get_api_key()
     if not api_key:
-        return GOOGLE_MODEL_CANDIDATES[0]
+        return []
 
     try:
         genai.configure(api_key=api_key)
+        models = genai.list_models()
+        available = []
+        for model in models:
+            name = getattr(model, "name", "")
+            methods = getattr(model, "supported_generation_methods", [])
+            if name and "generateContent" in methods:
+                available.append(name.replace("models/", ""))
+        return available
     except Exception:
-        return GOOGLE_MODEL_CANDIDATES[0]
+        return []
 
-    for model_name in GOOGLE_MODEL_CANDIDATES:
-        try:
-            model = genai.GenerativeModel(model_name)
-            model.generate_content("Reply with OK")
-            return model_name
-        except Exception:
-            continue
-    return GOOGLE_MODEL_CANDIDATES[0]
+
+def resolve_best_available_model():
+    available = get_available_models()
+    if available:
+        for candidate in FALLBACK_MODELS:
+            if candidate in available:
+                return candidate
+        return available[0]
+
+    for candidate in FALLBACK_MODELS:
+        return candidate
+    return "gemini-2.5-flash"
 
 
 def compatible_model_sequence(selected_model: str):
     ordered = []
     seen = set()
-    for model_name in [selected_model] + GOOGLE_MODEL_CANDIDATES:
+    for model_name in [selected_model] + FALLBACK_MODELS:
         value = (model_name or "").strip()
         if value and value not in seen:
             ordered.append(value)
@@ -389,7 +401,7 @@ with st.sidebar:
     voice_enabled = st.toggle("TTS", value=True)
     browser_voice = st.toggle("Mic web (Chrome)", value=False)
 
-    model_options = ["Auto (best available)"] + GOOGLE_MODEL_CANDIDATES
+    model_options = ["Auto (best available)"] + FALLBACK_MODELS
     selected_model_option = st.selectbox("Model", model_options)
     model_name = resolve_best_available_model() if selected_model_option == "Auto (best available)" else selected_model_option
     st.caption(f"Using model: {model_name}")
