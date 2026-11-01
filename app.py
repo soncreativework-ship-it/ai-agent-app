@@ -1,7 +1,7 @@
 import base64
 import io
 import google.generativeai as genai
-from gTTS import gTTS
+from gtts import gTTS
 import streamlit as st
 
 # 1. Cấu hình trang Streamlit
