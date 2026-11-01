@@ -11,6 +11,14 @@ try:
 except Exception:
     PdfReader = None
 
+DEFAULT_MODEL_CANDIDATES = [
+    "gemini-2.0-flash",
+    "gemini-2.5-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+    "gemini-2.0-flash-lite",
+]
+
 st.set_page_config(
     page_title="No-Ron Multi-Agent Studio",
     page_icon="🚀",
@@ -315,20 +323,50 @@ def get_api_key():
     return st.secrets.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
 
 
-def call_gemini(prompt: str, model_name: str) -> str:
+def compatible_model_sequence(selected_model: str):
+    ordered = []
+    seen = set()
+    for m in [selected_model] + DEFAULT_MODEL_CANDIDATES:
+        label = (m or "").strip()
+        if label and label not in seen:
+            ordered.append(label)
+            seen.add(label)
+    return ordered
+
+
+def call_gemini(prompt: str, selected_model: str) -> str:
     api_key = get_api_key()
     if not api_key:
         return (
             "Chưa có API key Google Gemini. Vui lòng thêm GEMINI_API_KEY vào Streamlit Secrets hoặc biến môi trường. "
             "Bạn vẫn có thể tiếp tục dùng text input để làm việc với hệ thống."
         )
-    try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(model_name)
-        response = model.generate_content(prompt)
-        return response.text.strip()
-    except Exception as e:
-        return f"No-Ron AI gặp lỗi khi gọi Gemini: {str(e)}"
+
+    genai.configure(api_key=api_key)
+
+    last_error = None
+    for model_name in compatible_model_sequence(selected_model):
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
+            if not getattr(response, "text", None):
+                raise ValueError("empty response")
+            return response.text.strip()
+        except Exception as e:
+            last_error = e
+            msg = str(e).lower()
+            if "404" in msg or "not found" in msg or "unsupported" in msg or "does not exist" in msg:
+                continue
+            return f"No-Ron AI gặp lỗi khi gọi Gemini: {str(e)}"
+
+    if last_error is not None:
+        return (
+            "No-Ron AI không tìm thấy model Gemini phù hợp trong tài khoản của bạn. "
+            "Hãy đổi sang một model đang được hỗ trợ trong tài khoản Google AI Studio của bạn. "
+            f"Lỗi cuối cùng: {str(last_error)}"
+        )
+
+    return "No-Ron AI không thể kết nối đến Gemini sau khi thử nhiều model khác nhau."
 
 
 def extract_text_from_uploaded_file(file_obj):
@@ -363,7 +401,7 @@ def planner_agent(task: str, context: str, language_name: str, model_name: str) 
         prompt = f"""
         Bạn là Planner Agent. Hãy phân tích nhiệm vụ sau và trả về kế hoạch rõ ràng:
         1. Mục tiêu
-        2. Các bước triển khai
+        2. Các bư���c triển khai
         3. Thời gian gợi ý
         4. Kết quả đầu ra
 
@@ -500,7 +538,7 @@ with st.sidebar:
     selected_lang_name, gtts_lang_code, speech_lang_code = language_option
     voice_enabled = st.toggle("TTS", value=True)
     browser_voice = st.toggle("Mic web (Chrome)", value=False)
-    model_name = st.selectbox("Model", ["gemini-1.5-flash", "gemini-1.5-pro"])
+    model_name = st.selectbox("Model", DEFAULT_MODEL_CANDIDATES)
 
 
 # Optional mic UI only when enabled
