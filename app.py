@@ -11,50 +11,307 @@ try:
 except Exception:
     PdfReader = None
 
-# Cấu hình trang Streamlit
 st.set_page_config(
     page_title="No-Ron Multi-Agent Studio",
     page_icon="🚀",
     layout="wide",
+    initial_sidebar_state="collapsed",
 )
 
-st.title("🚀 No-Ron Multi-Agent Studio")
-st.caption("AI đa tác nhân: Planner • Research • Script • Email • File Context • Voice assist")
+st.markdown(
+    """
+    <style>
+    :root {
+        --bg0: #0b1117;
+        --bg1: #111b25;
+        --bg2: #1a2430;
+        --card: #172430;
+        --card-2: #1f2d3a;
+        --line: rgba(255,255,255,0.08);
+        --text: #edf3f8;
+        --muted: #9cadbf;
+        --green: #32d583;
+        --blue: #4da3ff;
+        --purple: #b088ff;
+        --yellow: #f5c76b;
+        --orange: #ff8c5a;
+        --red: #ff6b6b;
+    }
 
-# Khởi tạo Session State
+    html, body {
+        background: linear-gradient(180deg, #0b1117 0%, #0f1720 100%);
+        color: var(--text);
+    }
+    .stApp {
+        background: linear-gradient(180deg, #0b1117 0%, #0f1720 100%);
+    }
+    .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 12px 18px;
+        margin-bottom: 14px;
+    }
+    .brand-wrap {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .brand-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #3b82f6, #22c55e);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: white;
+        font-size: 14px;
+    }
+    .brand-text {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        color: #f4f8fb;
+    }
+    .toolbar {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    .toolbar-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+    }
+    .top-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+    }
+    .search-wrap {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        width: 100%;
+    }
+    .search-box {
+        flex: 1;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 14px 16px;
+        color: var(--text);
+        font-size: 16px;
+        min-height: 52px;
+    }
+    .pill-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+    }
+    .pill {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--line);
+        color: var(--text);
+        border-radius: 999px;
+        padding: 10px 14px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+    .feed-card {
+        background: linear-gradient(180deg, rgba(23,36,48,0.85), rgba(18,28,38,0.92));
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 16px 16px 14px 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 10px 18px rgba(0,0,0,0.18);
+    }
+    .feed-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+    }
+    .left-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+    .avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        color: white;
+        background: linear-gradient(135deg, #5d9dff, #7c6cff);
+        flex-shrink: 0;
+    }
+    .repo-label {
+        color: var(--muted);
+        font-size: 13px;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .card-title {
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.3;
+        color: var(--text);
+    }
+    .follow-btn {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--text);
+        padding: 8px 14px;
+        font-weight: 600;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+    .summary {
+        margin-top: 14px;
+        color: #f5f8fb;
+        font-size: 17px;
+        line-height: 1.45;
+    }
+    .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+    }
+    .chip {
+        background: rgba(116, 167, 255, 0.11);
+        color: #dfeeff;
+        border: 1px solid rgba(116,167,255,0.2);
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    .meta-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 16px;
+        color: var(--muted);
+        font-size: 14px;
+    }
+    .meta-left {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .detail-panel {
+        margin-top: 16px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px;
+    }
+    .detail-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+    .detail-box {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px 14px;
+        color: var(--text);
+        line-height: 1.6;
+        white-space: pre-wrap;
+    }
+    .bottom-nav {
+        display: flex;
+        justify-content: center;
+        gap: 18px;
+        align-items: center;
+        margin-top: 16px;
+        padding-bottom: 6px;
+    }
+    .nav-btn {
+        width: 58px;
+        height: 58px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: rgba(255,255,255,0.04);
+        color: white;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+    .nav-btn.primary {
+        background: linear-gradient(135deg, #2dd4bf, #22c55e);
+        border: none;
+        color: #03150b;
+    }
+    .nav-btn.alert {
+        background: linear-gradient(135deg, #f59e0b, #f97316);
+        border: none;
+        color: white;
+    }
+    .glass {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 16px;
+    }
+    @media (max-width: 900px) {
+        .brand-text { font-size: 24px; }
+        .card-title { font-size: 17px; }
+        .summary { font-size: 15px; }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "tasks" not in st.session_state:
     st.session_state.tasks = []
 if "agent_outputs" not in st.session_state:
     st.session_state.agent_outputs = {}
-
-# --- Sidebar config ---
-with st.sidebar:
-    st.header("⚙️ Cấu hình hệ thống")
-
-    language_option = st.selectbox(
-        "🌐 Chọn ngôn ngữ phản hồi:",
-        options=[
-            ("Tiếng Việt", "vi", "vi-VN"),
-            ("English (US)", "en", "en-US"),
-            ("日本語 (Japanese)", "ja", "ja-JP"),
-            ("한국어 (Korean)", "ko", "ko-KR"),
-            ("Français (French)", "fr", "fr-FR"),
-        ],
-        format_func=lambda x: x[0],
-    )
-
-    selected_lang_name, gtts_lang_code, speech_lang_code = language_option
-    voice_enabled = st.toggle("🔊 Bật phát giọng (TTS)", value=True)
-    browser_voice = st.toggle("🎙️ Bật mic web (Chrome-friendly)", value=True)
-    model_name = st.selectbox("🤖 Chọn model Gemini", ["gemini-1.5-flash", "gemini-1.5-pro"])
-
-    st.divider()
-    st.markdown("**Trạng thái:** 🟢 Sẵn sàng")
+if "selected_task" not in st.session_state:
+    st.session_state.selected_task = 0
 
 
-# --- Utility functions ---
 def get_api_key():
     return st.secrets.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
 
@@ -66,7 +323,6 @@ def call_gemini(prompt: str, model_name: str) -> str:
             "Chưa có API key Google Gemini. Vui lòng thêm GEMINI_API_KEY vào Streamlit Secrets hoặc biến môi trường. "
             "Bạn vẫn có thể tiếp tục dùng text input để làm việc với hệ thống."
         )
-
     try:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel(model_name)
@@ -97,40 +353,33 @@ def text_to_audio_html(text: str, lang_code: str):
         fp = io.BytesIO()
         tts.write_to_fp(fp)
         fp.seek(0)
-        audio_bytes = fp.read()
-        b64 = base64.b64encode(audio_bytes).decode()
-        md = f"""
-            <audio autoplay style="display:none;">
-            <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
-            </audio>
-        """
-        return md
-    except Exception as e:
-        return f"<!-- Audio error: {str(e)} -->"
+        b64 = base64.b64encode(fp.read()).decode()
+        return f"<audio autoplay><source src='data:audio/mp3;base64,{b64}' type='audio/mp3'></audio>"
+    except Exception:
+        return ""
 
 
-# --- Agent logic ---
-def planner_agent(task: str, context: str, language_name: str) -> str:
+def planner_agent(task: str, context: str, language_name: str, model_name: str) -> str:
     if language_name == "Tiếng Việt":
         prompt = f"""
-        Bạn là Planner Agent. Hãy phân tích nhiệm vụ sau và trả về kế hoạch triển khai rõ ràng dưới dạng:
+        Bạn là Planner Agent. Hãy phân tích nhiệm vụ sau và trả về kế hoạch rõ ràng:
         1. Mục tiêu
-        2. Các bước thực hiện
+        2. Các bước triển khai
         3. Thời gian gợi ý
         4. Kết quả đầu ra
 
-        Tài liệu context:
+        Context:
         {context}
 
         Nhiệm vụ: {task}
         """
     else:
         prompt = f"""
-        You are the Planner Agent. Analyze the task and return a clear plan with:
+        You are the Planner Agent. Analyze the task and plan execution.
         1. Goal
-        2. Execution steps
-        3. Recommended timeline
-        4. Expected output
+        2. Steps
+        3. Timeline
+        4. Outcome
 
         Context:
         {context}
@@ -140,29 +389,29 @@ def planner_agent(task: str, context: str, language_name: str) -> str:
     return call_gemini(prompt, model_name)
 
 
-def researcher_agent(task: str, context: str, language_name: str) -> str:
+def researcher_agent(task: str, context: str, language_name: str, model_name: str) -> str:
     if language_name == "Tiếng Việt":
         prompt = f"""
-        Bạn là Research Agent. Hãy nghiên cứu và đưa ra ý tưởng chiến lược cho nhiệm vụ sau:
+        Bạn là Research Agent. Hãy đưa ra góc nhìn chiến lược cho nhiệm vụ sau:
         - đối tượng mục tiêu
         - xu hướng thị trường
-        - từ khóa gợi ý
-        - đối thủ và cách khác biệt hóa
-        - rủi ro / thách thức
+        - từ khóa và hướng đi
+        - đối thủ và phân biệt hóa
+        - rủi ro
 
-        Tài liệu context:
+        Context:
         {context}
 
         Nhiệm vụ: {task}
         """
     else:
         prompt = f"""
-        You are the Research Agent. Analyze the task and provide strategic insight for:
+        You are the Research Agent. Provide strategic analysis for:
         - target audience
         - market trends
-        - suggested keywords
-        - competitors and differentiation
-        - risks and challenges
+        - keywords
+        - differentiated opportunities
+        - risks
 
         Context:
         {context}
@@ -172,31 +421,25 @@ def researcher_agent(task: str, context: str, language_name: str) -> str:
     return call_gemini(prompt, model_name)
 
 
-def script_agent(task: str, context: str, language_name: str) -> str:
+def script_agent(task: str, context: str, language_name: str, model_name: str) -> str:
     if language_name == "Tiếng Việt":
         prompt = f"""
-        Bạn là Script Agent. Hãy viết kịch bản marketing/video cho nhiệm vụ sau.
+        Bạn là Script Agent. Viết kịch bản quảng cáo/video cho nhiệm vụ sau.
         Yêu cầu:
-        - hook mở đầu mạnh
-        - câu chuyện rõ ràng
-        - CTA rõ ràng
-        - ngắn gọn, dễ thực thi
-        - phù hợp với quảng cáo / video ngắn / landing page
+        - hook mạnh
+        - câu chuyện rõ
+        - CTA rõ
+        - ngắn gọn và có thể thực thi
 
-        Tài liệu context:
+        Context:
         {context}
 
         Nhiệm vụ: {task}
         """
     else:
         prompt = f"""
-        You are the Script Agent. Write a strong marketing or video script for this task.
-        Requirements:
-        - strong hook
-        - clear story arc
-        - clear CTA
-        - concise and practical
-        - suitable for ad, short video, or landing page
+        You are the Script Agent. Write a short marketing or video script.
+        Include hook, story, CTA, clarity, concise execution.
 
         Context:
         {context}
@@ -206,29 +449,21 @@ def script_agent(task: str, context: str, language_name: str) -> str:
     return call_gemini(prompt, model_name)
 
 
-def email_agent(task: str, context: str, language_name: str) -> str:
+def email_agent(task: str, context: str, language_name: str, model_name: str) -> str:
     if language_name == "Tiếng Việt":
         prompt = f"""
-        Bạn là Email Agent. Viết 1 email ngắn, chuyên nghiệp, có tính hành động cho công việc sau.
-        Email nên có:
-        - subject line
-        - greeting
-        - nội dung chính
-        - CTA
+        Bạn là Email Agent. Viết email ngắn, chuyên nghiệp, có tính hành động cho nhiệm vụ sau.
+        Có: subject, greeting, body, CTA.
 
-        Tài liệu context:
+        Context:
         {context}
 
         Nhiệm vụ: {task}
         """
     else:
         prompt = f"""
-        You are the Email Agent. Write a concise, professional, action-oriented email for the following task.
-        Include:
-        - subject line
-        - greeting
-        - main content
-        - CTA
+        You are the Email Agent. Draft a concise professional email for this task.
+        Include: subject, greeting, body, CTA.
 
         Context:
         {context}
@@ -238,12 +473,11 @@ def email_agent(task: str, context: str, language_name: str) -> str:
     return call_gemini(prompt, model_name)
 
 
-def orchestrate_task(task: str, context: str, language_name: str) -> dict:
-    plan = planner_agent(task, context, language_name)
-    research = researcher_agent(task, context, language_name)
-    script = script_agent(task, context, language_name)
-    email = email_agent(task, context, language_name)
-
+def orchestrate_task(task: str, context: str, language_name: str, model_name: str) -> dict:
+    plan = planner_agent(task, context, language_name, model_name)
+    research = researcher_agent(task, context, language_name, model_name)
+    script = script_agent(task, context, language_name, model_name)
+    email = email_agent(task, context, language_name, model_name)
     return {
         "plan": plan,
         "research": research,
@@ -252,122 +486,138 @@ def orchestrate_task(task: str, context: str, language_name: str) -> dict:
     }
 
 
-# --- Voice assist (Chrome-friendly) ---
+with st.sidebar:
+    st.header("⚙️ Settings")
+    language_option = st.selectbox(
+        "Language",
+        [
+            ("Tiếng Việt", "vi", "vi-VN"),
+            ("English (US)", "en", "en-US"),
+            ("日本語", "ja", "ja-JP"),
+            ("한국어", "ko", "ko-KR"),
+        ],
+        format_func=lambda x: x[0],
+    )
+    selected_lang_name, gtts_lang_code, speech_lang_code = language_option
+    voice_enabled = st.toggle("TTS", value=True)
+    browser_voice = st.toggle("Mic web (Chrome)", value=True)
+    model_name = st.selectbox("Model", ["gemini-1.5-flash", "gemini-1.5-pro"])
+
+
+# voice widget
 if browser_voice:
-    voice_html = f"""
-    <div style="margin-bottom: 12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-        <button id="voice-button" style="background:#ff5f57;color:white;border:none;padding:10px 18px;border-radius:12px;cursor:pointer;font-weight:600;">
-            🎙️ Nói để nhập lệnh
-        </button>
-        <span id="voice-status" style="color:#b4b4b4;font-size:14px;">Chưa bắt đầu</span>
-    </div>
-    <script>
-    const button = document.getElementById('voice-button');
-    const status = document.getElementById('voice-status');
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {{
-        status.textContent = 'Trình duyệt không hỗ trợ mic web';
-        button.disabled = true;
-    }} else {{
-        const recognition = new SpeechRecognition();
-        recognition.lang = '{speech_lang_code}';
-        recognition.interimResults = false;
-        recognition.continuous = false;
-
-        button.addEventListener('click', () => {{
-            status.textContent = 'Đang nghe...';
-            button.textContent = '🔴 Đang nghe';
-
-            navigator.mediaDevices.getUserMedia({{ audio: true }})
-                .then(() => recognition.start())
-                .catch(() => {{
-                    status.textContent = 'Mic bị từ chối hoặc không hoạt động. Hãy gõ tay.';
-                    button.textContent = '🎙️ Nói để nhập lệnh';
-                }});
-        }});
-
-        recognition.onresult = (event) => {{
-            const transcript = event.results[0][0].transcript;
-            status.textContent = 'Đã nghe: ' + transcript;
-            const textareas = document.querySelectorAll('textarea');
-            const target = textareas[textareas.length - 1];
-            if (target) {{
-                target.value = transcript;
-                target.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                target.focus();
-            }}
-            button.textContent = '🎙️ Nói để nhập lệnh';
-        }};
-
-        recognition.onerror = (event) => {{
-            status.textContent = 'Lỗi mic: ' + event.error + '. Hãy gõ tay.';
-            button.textContent = '🎙️ Nói để nhập lệnh';
-        }};
-
-        recognition.onend = () => {{
-            button.textContent = '🎙️ Nói để nhập lệnh';
-        }};
-    }}
-    </script>
-    """
-    st.components.v1.html(voice_html, height=110)
-
-
-# --- Main app area ---
-col1, col2 = st.columns([1.7, 1])
-
-with col1:
-    st.subheader("💬 Trò chuyện & Giao việc")
-
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-    uploaded_files = st.file_uploader(
-        "📎 Tải lên file đính kèm (PDF, TXT, MD, CSV)",
-        accept_multiple_files=True,
-        type=["txt", "md", "csv", "pdf"],
+    st.markdown(
+        """
+        <div style="margin: 0 0 14px 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <button id="voice-button" style="background:#1f8fff;color:#fff;border:none;padding:10px 16px;border-radius:12px;font-weight:700;cursor:pointer;">🎙️ Nói lệnh</button>
+            <span id="voice-status" style="color:#b7c6d6;font-size:14px;">Chrome mic ready</span>
+        </div>
+        <script>
+        const button = document.getElementById('voice-button');
+        const status = document.getElementById('voice-status');
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            status.textContent = 'Mic không được hỗ trợ';
+            button.disabled = true;
+        } else {
+            const recognition = new SpeechRecognition();
+            recognition.lang = '""" + speech_lang_code + """';
+            recognition.interimResults = false;
+            recognition.continuous = false;
+            button.addEventListener('click', () => {
+                status.textContent = 'Đang nghe...';
+                button.textContent = '🔴 Đang nghe';
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(() => recognition.start())
+                    .catch(() => {
+                        status.textContent = 'Mic bị từ chối';
+                        button.textContent = '🎙️ Nói lệnh';
+                    });
+            });
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                status.textContent = 'Đã nghe: ' + transcript;
+                const textareas = document.querySelectorAll('textarea');
+                const target = textareas[textareas.length - 1];
+                if (target) {
+                    target.value = transcript;
+                    target.dispatchEvent(new Event('input', { bubbles: true }));
+                    target.focus();
+                }
+                button.textContent = '🎙️ Nói lệnh';
+            };
+            recognition.onerror = (event) => {
+                status.textContent = 'Lỗi mic: ' + event.error;
+                button.textContent = '🎙️ Nói lệnh';
+            };
+            recognition.onend = () => {
+                button.textContent = '🎙️ Nói lệnh';
+            };
+        }
+        </script>
+        """,
+        unsafe_allow_html=True,
     )
 
-    user_prompt = st.chat_input("Nhập yêu cầu cho hệ thống AI đa tác nhân...")
 
-    if user_prompt or uploaded_files:
-        context_chunks = []
-        if uploaded_files:
-            for file_obj in uploaded_files:
-                context_chunks.append(f"### File: {file_obj.name}\n{extract_text_from_uploaded_file(file_obj)}")
+# header
+st.markdown(
+    """
+    <div class="topbar">
+        <div class="brand-wrap">
+            <div class="brand-icon">N</div>
+            <div class="brand-text">No-Ron</div>
+        </div>
+        <div class="toolbar">
+            <div class="toolbar-btn">↻</div>
+            <div class="toolbar-btn">◫</div>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
-        combined_context = "\n\n".join(context_chunks) if context_chunks else "Không có file đính kèm."
+st.markdown(
+    """
+    <div class="top-actions">
+        <div class="search-wrap">
+            <div class="pill">Lọc</div>
+            <div class="search-box">Khi bạn upload file hoặc nhập lệnh, task sẽ hiện ở đây</div>
+        </div>
+        <div class="toolbar-btn">⋯</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
-        st.session_state.messages.append({"role": "user", "content": user_prompt or "[File upload only]"})
-        if user_prompt:
-            with st.chat_message("user"):
-                st.markdown(user_prompt)
-        else:
-            with st.chat_message("user"):
-                st.markdown("[Người dùng upload file để cung cấp context]")
+st.markdown('<div class="pill-row"><div class="pill">Tất cả</div><div class="pill">Đang hoạt động</div><div class="pill">Pending</div><div class="pill">Nổi bật</div></div>', unsafe_allow_html=True)
 
-        with st.spinner("No-Ron đang điều phối Planner, Research, Script và Email Agent..."):
-            result = orchestrate_task(user_prompt or "Tổng hợp file đính kèm và đưa ra kế hoạch xử lý.", combined_context, selected_lang_name)
 
-        st.session_state.agent_outputs[user_prompt or "uploaded_files"] = result
+uploaded_files = st.file_uploader("📎 Upload file (PDF, TXT, MD, CSV)", accept_multiple_files=True, type=["txt", "md", "csv", "pdf"])
+user_prompt = st.chat_input("Nhập yêu cầu hoặc nói lệnh...")
 
-        tabs = st.tabs(["Kế hoạch", "Nghiên cứu", "Kịch bản", "Email"])
+if user_prompt or uploaded_files:
+    context_chunks = []
+    if uploaded_files:
+        for f in uploaded_files:
+            context_chunks.append(f"### File: {f.name}\n{extract_text_from_uploaded_file(f)}")
+    combined_context = "\n\n".join(context_chunks) if context_chunks else "Không có file đính kèm."
+    task_text = user_prompt or "Tổng hợp file đính kèm và đưa ra kế hoạch xử lý."
 
-        with tabs[0]:
-            st.markdown(result["plan"])
+    with st.spinner("No-Ron đang điều phối task cho Planner / Research / Script / Email..."):
+        result = orchestrate_task(task_text, combined_context, selected_lang_name, model_name)
 
-        with tabs[1]:
-            st.markdown(result["research"])
-
-        with tabs[2]:
-            st.markdown(result["script"])
-
-        with tabs[3]:
-            st.markdown(result["email"])
-
-        final_text = (
+    st.session_state.messages.append({"role": "user", "content": task_text})
+    st.session_state.agent_outputs[task_text] = result
+    task_summary = (result["plan"][:180] + "...") if len(result["plan"]) > 180 else result["plan"]
+    new_task = {
+        "title": task_text[:70] + ("..." if len(task_text) > 70 else ""),
+        "summary": task_summary,
+        "tags": ["Research", "Script", "Email", "Task"],
+        "status": "Đã phân phối",
+        "repo": "No-Ron Studio",
+        "type": "AI Workflow",
+        "detail": (
             "### Kế hoạch\n"
             f"{result['plan']}\n\n"
             "### Nghiên cứu\n"
@@ -376,44 +626,113 @@ with col1:
             f"{result['script']}\n\n"
             "### Email\n"
             f"{result['email']}"
+        ),
+    }
+    st.session_state.tasks.insert(0, new_task)
+    st.session_state.selected_task = 0
+
+# render feed cards
+if not st.session_state.tasks:
+    sample_task = {
+        "title": "Expensify / Ứng dụng",
+        "summary": "Chào mừng đến với Expensify mới: một sự tái định hình hoàn toàn về hợp tác tài chính, tập trung vào trải nghiệm người dùng. Hãy giúp xây dựng hệ thống tiếp theo...",
+        "tags": ["TypeScript", "5.1k", "AI"],
+        "status": "Nổi bật",
+        "repo": "Expensify",
+        "type": "ứng dụng",
+        "detail": "Task mẫu để mô phỏng feed. Bạn có thể nhập lệnh mới để tạo task thực tế.",
+    }
+    st.session_state.tasks = [sample_task]
+
+for idx, task in enumerate(st.session_state.tasks):
+    with st.container():
+        st.markdown(
+            f"""
+            <div class="feed-card">
+                <div class="feed-head">
+                    <div class="left-head">
+                        <div class="avatar">{task['repo'][0].upper()}</div>
+                        <div>
+                            <div class="repo-label">{task['repo']}</div>
+                            <div class="card-title">{task['title']}</div>
+                        </div>
+                    </div>
+                    <button class="follow-btn">{task['status']}</button>
+                </div>
+                <div class="summary">{task['summary']}</div>
+                <div class="chip-row">
+                    {''.join(f'<div class="chip">{tag}</div>' for tag in task['tags'])}
+                </div>
+                <div class="meta-row">
+                    <div class="meta-left">
+                        <span><span class="dot" style="background: #2ed573;"></span> {task['type']}</span>
+                        <span>•</span>
+                        <span>{task['status']}</span>
+                    </div>
+                    <div>
+                        <button class="follow-btn" style="background: rgba(50,213,131,0.12); border-color: rgba(50,213,131,0.25);">Xem chi tiết</button>
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
-        with st.chat_message("assistant"):
-            st.markdown(final_text)
-            if voice_enabled:
-                audio_html = text_to_audio_html(final_text, gtts_lang_code)
-                st.components.v1.html(audio_html, height=0, width=0)
+        if st.button(f"Mở task #{idx + 1}", key=f"open_{idx}"):
+            st.session_state.selected_task = idx
 
-        st.session_state.messages.append({"role": "assistant", "content": final_text})
+        if idx == st.session_state.selected_task:
+            detail = st.session_state.tasks[idx].get("detail", "Chưa có nội dung chi tiết.")
+            st.markdown(
+                """
+                <div class="detail-panel">
+                    <div class="detail-title">Chi tiết task</div>
+                    <div class="detail-box">""" + detail + """</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
-        st.session_state.tasks.append({
-            "task": user_prompt or "[Task từ file upload]",
-            "status": "Đã phân phối ⚡",
-            "lang": selected_lang_name,
-        })
+# bottom nav
+st.markdown(
+    """
+    <div class="bottom-nav">
+        <div class="nav-btn">←</div>
+        <div class="nav-btn primary">＋</div>
+        <div class="nav-btn alert">4</div>
+        <div class="nav-btn">⋯</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
-with col2:
-    st.subheader("⚡ Bảng công việc No-Ron")
-    if not st.session_state.tasks:
-        st.info("Chưa có nhiệm vụ nào. Hãy nhập yêu cầu hoặc upload file để AI phân phối task cho các agent.")
-    else:
-        for idx, item in enumerate(reversed(st.session_state.tasks)):
-            with st.container(border=True):
-                st.markdown(f"**Nhiệm vụ #{len(st.session_state.tasks) - idx}:** {item['task']}")
-                st.caption(f"Ngôn ngữ: {item['lang']} | Trạng thái: {item['status']}")
+# explicit task detail fallback if selected task exists
+if st.session_state.tasks:
+    sel = st.session_state.selected_task if st.session_state.selected_task < len(st.session_state.tasks) else 0
+    selected_task = st.session_state.tasks[sel]
+    if "detail" in selected_task:
+        st.markdown("<div class='glass'><div class='detail-title'>Task detail preview</div></div>", unsafe_allow_html=True)
+        st.code(selected_task["detail"][:4000], language="text")
 
-# --- Additional info panel ---
-with st.expander("🧠 Cấu trúc Agentic multi-agent", expanded=False):
-    st.markdown(
-        "- Planner Agent: phân tích task và chia kế hoạch\n"
-        "- Research Agent: nghiên cứu thị trường, từ khóa, đối tác\n"
-        "- Script Agent: viết kịch bản marketing / ads / video\n"
-        "- Email Agent: viết email cập nhật và follow-up\n"
-        "- File Context: đọc file upload để bổ sung input\n"
-        "- Voice assist: mic web Chrome-friendly, không bắt buộc\n"
-        "- TTS: đọc phản hồi nếu trình duyệt hỗ trợ"
-    )
+# extra visible chat area at the bottom to keep the app interactive
+st.markdown("<br>", unsafe_allow_html=True)
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
-    st.markdown(
-        "Ví dụ yêu cầu: 'Tạo 1 video ads 15s cho sản phẩm X, nghiên cứu đối tượng, keyword, script, và viết email báo cáo kết quả làm việc.'"
-    )
+if user_prompt or uploaded_files:
+    st.caption("Note: Mic hỗ trợ trên Chrome nhưng app vẫn hoạt động bình thường bằng text + file upload.")
+    if voice_enabled:
+        final_text = (
+            "### Kế hoạch\n"
+            f"{st.session_state.agent_outputs.get(user_prompt or 'uploaded_files', {}).get('plan', '')}\n\n"
+            "### Nghiên cứu\n"
+            f"{st.session_state.agent_outputs.get(user_prompt or 'uploaded_files', {}).get('research', '')}\n\n"
+            "### Kịch bản\n"
+            f"{st.session_state.agent_outputs.get(user_prompt or 'uploaded_files', {}).get('script', '')}\n\n"
+            "### Email\n"
+            f"{st.session_state.agent_outputs.get(user_prompt or 'uploaded_files', {}).get('email', '')}"
+        )
+        audio_html = text_to_audio_html(final_text, gtts_lang_code)
+        if audio_html:
+            st.components.v1.html(audio_html, height=0, width=0)
