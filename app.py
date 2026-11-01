@@ -1,6 +1,6 @@
 import streamlit as st
 import base64
-from gTTS import gTTS
+from gtts import gTTS
 import io
 
 # Cấu hình trang Streamlit
