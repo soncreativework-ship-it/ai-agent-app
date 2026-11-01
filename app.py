@@ -6,6 +6,11 @@ import streamlit as st
 from gtts import gTTS
 import google.generativeai as genai
 
+try:
+    from pypdf import PdfReader
+except Exception:
+    PdfReader = None
+
 # Cấu hình trang Streamlit
 st.set_page_config(
     page_title="No-Ron Multi-Agent Studio",
@@ -14,7 +19,7 @@ st.set_page_config(
 )
 
 st.title("🚀 No-Ron Multi-Agent Studio")
-st.caption("AI đa tác nhân: Planner • Research • Script • Email • TTS")
+st.caption("AI đa tác nhân: Planner • Research • Script • Email • File Context")
 
 # Khởi tạo Session State
 if "messages" not in st.session_state:
@@ -70,6 +75,21 @@ def call_gemini(prompt: str, model_name: str) -> str:
         return f"No-Ron AI gặp lỗi khi gọi Gemini: {str(e)}"
 
 
+def extract_text_from_uploaded_file(file_obj):
+    name = (file_obj.name or "").lower()
+    try:
+        if name.endswith(".pdf"):
+            if PdfReader is None:
+                return "[PDF không thể đọc vì thư viện PyPDF chưa có trong môi trường.]"
+            reader = PdfReader(file_obj)
+            pages = [page.extract_text() or "" for page in reader.pages]
+            return "\n".join(pages)
+        raw = file_obj.read()
+        return raw.decode("utf-8", errors="ignore")
+    except Exception as e:
+        return f"[Không thể đọc file: {e}]"
+
+
 def text_to_audio_html(text: str, lang_code: str):
     try:
         tts = gTTS(text=text, lang=lang_code, slow=False)
@@ -89,7 +109,7 @@ def text_to_audio_html(text: str, lang_code: str):
 
 
 # --- Agent logic ---
-def planner_agent(task: str, language_name: str) -> str:
+def planner_agent(task: str, context: str, language_name: str) -> str:
     if language_name == "Tiếng Việt":
         prompt = f"""
         Bạn là Planner Agent. Hãy phân tích nhiệm vụ sau và trả về kế hoạch triển khai rõ ràng dưới dạng:
@@ -97,6 +117,9 @@ def planner_agent(task: str, language_name: str) -> str:
         2. Các bước thực hiện
         3. Thời gian gợi ý
         4. Kết quả đầu ra
+
+        Tài liệu context:
+        {context}
 
         Nhiệm vụ: {task}
         """
@@ -108,12 +131,15 @@ def planner_agent(task: str, language_name: str) -> str:
         3. Recommended timeline
         4. Expected output
 
+        Context:
+        {context}
+
         Task: {task}
         """
     return call_gemini(prompt, model_name)
 
 
-def researcher_agent(task: str, language_name: str) -> str:
+def researcher_agent(task: str, context: str, language_name: str) -> str:
     if language_name == "Tiếng Việt":
         prompt = f"""
         Bạn là Research Agent. Hãy nghiên cứu và đưa ra ý tưởng chiến lược cho nhiệm vụ sau:
@@ -122,6 +148,9 @@ def researcher_agent(task: str, language_name: str) -> str:
         - từ khóa gợi ý
         - đối thủ và cách khác biệt hóa
         - rủi ro / thách thức
+
+        Tài liệu context:
+        {context}
 
         Nhiệm vụ: {task}
         """
@@ -134,12 +163,15 @@ def researcher_agent(task: str, language_name: str) -> str:
         - competitors and differentiation
         - risks and challenges
 
+        Context:
+        {context}
+
         Task: {task}
         """
     return call_gemini(prompt, model_name)
 
 
-def script_agent(task: str, language_name: str) -> str:
+def script_agent(task: str, context: str, language_name: str) -> str:
     if language_name == "Tiếng Việt":
         prompt = f"""
         Bạn là Script Agent. Hãy viết kịch bản marketing/video cho nhiệm vụ sau.
@@ -149,6 +181,9 @@ def script_agent(task: str, language_name: str) -> str:
         - CTA rõ ràng
         - ngắn gọn, dễ thực thi
         - phù hợp với quảng cáo / video ngắn / landing page
+
+        Tài liệu context:
+        {context}
 
         Nhiệm vụ: {task}
         """
@@ -162,12 +197,15 @@ def script_agent(task: str, language_name: str) -> str:
         - concise and practical
         - suitable for ad, short video, or landing page
 
+        Context:
+        {context}
+
         Task: {task}
         """
     return call_gemini(prompt, model_name)
 
 
-def email_agent(task: str, language_name: str) -> str:
+def email_agent(task: str, context: str, language_name: str) -> str:
     if language_name == "Tiếng Việt":
         prompt = f"""
         Bạn là Email Agent. Viết 1 email ngắn, chuyên nghiệp, có tính hành động cho công việc sau.
@@ -176,6 +214,9 @@ def email_agent(task: str, language_name: str) -> str:
         - greeting
         - nội dung chính
         - CTA
+
+        Tài liệu context:
+        {context}
 
         Nhiệm vụ: {task}
         """
@@ -188,16 +229,19 @@ def email_agent(task: str, language_name: str) -> str:
         - main content
         - CTA
 
+        Context:
+        {context}
+
         Task: {task}
         """
     return call_gemini(prompt, model_name)
 
 
-def orchestrate_task(task: str, language_name: str) -> dict:
-    plan = planner_agent(task, language_name)
-    research = researcher_agent(task, language_name)
-    script = script_agent(task, language_name)
-    email = email_agent(task, language_name)
+def orchestrate_task(task: str, context: str, language_name: str) -> dict:
+    plan = planner_agent(task, context, language_name)
+    research = researcher_agent(task, context, language_name)
+    script = script_agent(task, context, language_name)
+    email = email_agent(task, context, language_name)
 
     return {
         "plan": plan,
@@ -208,7 +252,7 @@ def orchestrate_task(task: str, language_name: str) -> dict:
 
 
 # --- Main app area ---
-col1, col2 = st.columns([1.5, 1])
+col1, col2 = st.columns([1.7, 1])
 
 with col1:
     st.subheader("💬 Trò chuyện & Giao việc")
@@ -217,17 +261,34 @@ with col1:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
+    uploaded_files = st.file_uploader(
+        "📎 Tải lên file đính kèm (PDF, TXT, MD, CSV)",
+        accept_multiple_files=True,
+        type=["txt", "md", "csv", "pdf"],
+    )
+
     user_prompt = st.chat_input("Nhập yêu cầu cho hệ thống AI đa tác nhân...")
 
-    if user_prompt:
-        st.session_state.messages.append({"role": "user", "content": user_prompt})
-        with st.chat_message("user"):
-            st.markdown(user_prompt)
+    if user_prompt or uploaded_files:
+        context_chunks = []
+        if uploaded_files:
+            for file_obj in uploaded_files:
+                context_chunks.append(f"### File: {file_obj.name}\n{extract_text_from_uploaded_file(file_obj)}")
+
+        combined_context = "\n\n".join(context_chunks) if context_chunks else "Không có file đính kèm."
+
+        st.session_state.messages.append({"role": "user", "content": user_prompt or "[File upload only]"})
+        if user_prompt:
+            with st.chat_message("user"):
+                st.markdown(user_prompt)
+        else:
+            with st.chat_message("user"):
+                st.markdown("[Người dùng upload file để cung cấp context]")
 
         with st.spinner("No-Ron đang điều phối Planner, Research, Script và Email Agent..."):
-            result = orchestrate_task(user_prompt, selected_lang_name)
+            result = orchestrate_task(user_prompt or "Tổng hợp file đính kèm và đưa ra kế hoạch xử lý.", combined_context, selected_lang_name)
 
-        st.session_state.agent_outputs[user_prompt] = result
+        st.session_state.agent_outputs[user_prompt or "uploaded_files"] = result
 
         tabs = st.tabs(["Kế hoạch", "Nghiên cứu", "Kịch bản", "Email"])
 
@@ -263,7 +324,7 @@ with col1:
         st.session_state.messages.append({"role": "assistant", "content": final_text})
 
         st.session_state.tasks.append({
-            "task": user_prompt,
+            "task": user_prompt or "[Task từ file upload]",
             "status": "Đã phân phối ⚡",
             "lang": selected_lang_name,
         })
@@ -271,7 +332,7 @@ with col1:
 with col2:
     st.subheader("⚡ Bảng công việc No-Ron")
     if not st.session_state.tasks:
-        st.info("Chưa có nhiệm vụ nào. Hãy nhập yêu cầu để AI phân phối task cho các agent.")
+        st.info("Chưa có nhiệm vụ nào. Hãy nhập yêu cầu hoặc upload file để AI phân phối task cho các agent.")
     else:
         for idx, item in enumerate(reversed(st.session_state.tasks)):
             with st.container(border=True):
@@ -285,9 +346,10 @@ with st.expander("🧠 Cấu trúc Agentic multi-agent", expanded=False):
         "- Research Agent: nghiên cứu thị trường, từ khóa, đối tác\n"
         "- Script Agent: viết kịch bản marketing / ads / video\n"
         "- Email Agent: viết email cập nhật và follow-up\n"
+        "- File Context: đọc file upload để bổ sung input\n"
         "- TTS: đọc phản hồi nếu trình duyệt hỗ trợ"
     )
 
     st.markdown(
-        "Ví dụ yêu cầu: 'Tạo 1 video ads 15s cho sản phẩm X, nghiên cứu từ khóa, viết script và gửi email báo cáo kết quả làm việc.'"
+        "Ví dụ yêu cầu: 'Tạo 1 video ads 15s cho sản phẩm X, nghiên cứu đối tượng, keyword, script, và viết email báo cáo kết quả làm việc.'"
     )
