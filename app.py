@@ -47,7 +47,7 @@ with st.sidebar:
 
     selected_lang_name, gtts_lang_code, speech_lang_code = language_option
     voice_enabled = st.toggle("🔊 Bật phát giọng (TTS)", value=True)
-    browser_voice = st.toggle("🎙️ Bật mic web (best-effort)", value=True)
+    browser_voice = st.toggle("🎙️ Bật mic web (Chrome-friendly)", value=True)
     model_name = st.selectbox("🤖 Chọn model Gemini", ["gemini-1.5-flash", "gemini-1.5-pro"])
 
     st.divider()
@@ -252,70 +252,66 @@ def orchestrate_task(task: str, context: str, language_name: str) -> dict:
     }
 
 
-# --- Voice input widget (best effort) ---
+# --- Voice assist (Chrome-friendly) ---
 if browser_voice:
-    st.markdown(
-        """
-        <div style="margin-bottom: 12px;">
-            <button id="voice-button" style="background:#ff5f57;color:white;border:none;padding:10px 18px;border-radius:12px;cursor:pointer;font-weight:600;">
-                🎙️ Nói để nhập lệnh
-            </button>
-            <span id="voice-status" style="margin-left:10px;color:#b4b4b4;font-size:14px;">Chưa bắt đầu</span>
-        </div>
-        <script>
-        const button = document.getElementById('voice-button');
-        const status = document.getElementById('voice-status');
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    voice_html = f"""
+    <div style="margin-bottom: 12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <button id="voice-button" style="background:#ff5f57;color:white;border:none;padding:10px 18px;border-radius:12px;cursor:pointer;font-weight:600;">
+            🎙️ Nói để nhập lệnh
+        </button>
+        <span id="voice-status" style="color:#b4b4b4;font-size:14px;">Chưa bắt đầu</span>
+    </div>
+    <script>
+    const button = document.getElementById('voice-button');
+    const status = document.getElementById('voice-status');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-        if (!SpeechRecognition) {
-            status.textContent = 'Trình duyệt không hỗ trợ mic web';
-            button.disabled = true;
-        } else {
-            const recognition = new SpeechRecognition();
-            recognition.lang = '""" + speech_lang_code + """';
-            recognition.interimResults = false;
-            recognition.continuous = false;
+    if (!SpeechRecognition) {{
+        status.textContent = 'Trình duyệt không hỗ trợ mic web';
+        button.disabled = true;
+    }} else {{
+        const recognition = new SpeechRecognition();
+        recognition.lang = '{speech_lang_code}';
+        recognition.interimResults = false;
+        recognition.continuous = false;
 
-            button.addEventListener('click', () => {
-                status.textContent = 'Đang nghe...';
-                button.textContent = '🔴 Đang nghe';
+        button.addEventListener('click', () => {{
+            status.textContent = 'Đang nghe...';
+            button.textContent = '🔴 Đang nghe';
 
-                navigator.mediaDevices.getUserMedia({ audio: true })
-                    .then(() => {
-                        recognition.start();
-                    })
-                    .catch(() => {
-                        status.textContent = 'Mic bị từ chối hoặc không hoạt động. Hãy gõ tay.';
-                        button.textContent = '🎙️ Nói để nhập lệnh';
-                    });
-            });
+            navigator.mediaDevices.getUserMedia({{ audio: true }})
+                .then(() => recognition.start())
+                .catch(() => {{
+                    status.textContent = 'Mic bị từ chối hoặc không hoạt động. Hãy gõ tay.';
+                    button.textContent = '🎙️ Nói để nhập lệnh';
+                }});
+        }});
 
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                status.textContent = 'Đã nghe: ' + transcript;
-                const textareas = document.querySelectorAll('textarea');
-                const target = textareas[textareas.length - 1];
-                if (target) {
-                    target.value = transcript;
-                    target.dispatchEvent(new Event('input', { bubbles: true }));
-                    target.focus();
-                }
-                button.textContent = '🎙️ Nói để nhập lệnh';
-            };
+        recognition.onresult = (event) => {{
+            const transcript = event.results[0][0].transcript;
+            status.textContent = 'Đã nghe: ' + transcript;
+            const textareas = document.querySelectorAll('textarea');
+            const target = textareas[textareas.length - 1];
+            if (target) {{
+                target.value = transcript;
+                target.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                target.focus();
+            }}
+            button.textContent = '🎙️ Nói để nhập lệnh';
+        }};
 
-            recognition.onerror = (event) => {
-                status.textContent = 'Lỗi mic: ' + event.error + '. Hãy gõ tay.';
-                button.textContent = '🎙️ Nói để nhập lệnh';
-            };
+        recognition.onerror = (event) => {{
+            status.textContent = 'Lỗi mic: ' + event.error + '. Hãy gõ tay.';
+            button.textContent = '🎙️ Nói để nhập lệnh';
+        }};
 
-            recognition.onend = () => {
-                button.textContent = '🎙️ Nói để nhập lệnh';
-            };
-        }
-        </script>
-        """,
-        unsafe_allow_html=True,
-    )
+        recognition.onend = () => {{
+            button.textContent = '🎙️ Nói để nhập lệnh';
+        }};
+    }}
+    </script>
+    """
+    st.components.v1.html(voice_html, height=110)
 
 
 # --- Main app area ---
@@ -414,7 +410,7 @@ with st.expander("🧠 Cấu trúc Agentic multi-agent", expanded=False):
         "- Script Agent: viết kịch bản marketing / ads / video\n"
         "- Email Agent: viết email cập nhật và follow-up\n"
         "- File Context: đọc file upload để bổ sung input\n"
-        "- Voice assist: mic web best-effort trên trình duyệt hỗ trợ\n"
+        "- Voice assist: mic web Chrome-friendly, không bắt buộc\n"
         "- TTS: đọc phản hồi nếu trình duyệt hỗ trợ"
     )
 
