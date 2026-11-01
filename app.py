@@ -34,18 +34,14 @@ st.markdown(
         --bg1: #111b25;
         --bg2: #1a2430;
         --card: #172430;
-        --card-2: #1f2d3a;
         --line: rgba(255,255,255,0.08);
         --text: #edf3f8;
         --muted: #9cadbf;
         --green: #32d583;
         --blue: #4da3ff;
         --purple: #b088ff;
-        --yellow: #f5c76b;
-        --orange: #ff8c5a;
         --red: #ff6b6b;
     }
-
     html, body {
         background: linear-gradient(180deg, #0b1117 0%, #0f1720 100%);
         color: var(--text);
@@ -53,256 +49,87 @@ st.markdown(
     .stApp {
         background: linear-gradient(180deg, #0b1117 0%, #0f1720 100%);
     }
-    .topbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 12px 18px;
-        margin-bottom: 14px;
-    }
-    .brand-wrap {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    .brand-icon {
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #3b82f6, #22c55e);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        color: white;
-        font-size: 14px;
-    }
-    .brand-text {
-        font-size: 28px;
-        font-weight: 700;
-        letter-spacing: -0.04em;
-        color: #f4f8fb;
-    }
-    .toolbar {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-    }
-    .toolbar-btn {
-        width: 34px;
-        height: 34px;
-        border-radius: 10px;
-        background: rgba(255,255,255,0.06);
-        border: 1px solid var(--line);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 700;
-    }
-    .top-actions {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    .app-shell {
         background: rgba(255,255,255,0.02);
         border: 1px solid var(--line);
-        border-radius: 16px;
-        padding: 10px 12px;
-        margin-bottom: 12px;
+        border-radius: 18px;
+        padding: 16px 18px 8px 18px;
     }
-    .search-wrap {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        width: 100%;
-    }
-    .search-box {
-        flex: 1;
-        background: rgba(255,255,255,0.02);
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 14px 16px;
-        color: var(--text);
-        font-size: 16px;
-        min-height: 52px;
-    }
-    .pill-row {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-bottom: 14px;
-    }
-    .pill {
-        background: rgba(255,255,255,0.03);
-        border: 1px solid var(--line);
-        color: var(--text);
-        border-radius: 999px;
-        padding: 10px 14px;
-        font-size: 14px;
-        font-weight: 600;
-    }
-    .feed-card {
-        background: linear-gradient(180deg, rgba(23,36,48,0.85), rgba(18,28,38,0.92));
+    .task-card {
+        background: linear-gradient(180deg, rgba(23,36,48,0.9), rgba(18,28,38,0.96));
         border: 1px solid var(--line);
         border-radius: 18px;
-        padding: 16px 16px 14px 16px;
+        padding: 16px;
         margin-bottom: 16px;
         box-shadow: 0 10px 18px rgba(0,0,0,0.18);
     }
-    .feed-head {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 12px;
+    .task-card h3 {
+        margin: 0 0 8px 0;
+        color: var(--text);
+        font-size: 1.2rem;
     }
-    .left-head {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-width: 0;
-    }
-    .avatar {
-        width: 38px;
-        height: 38px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 800;
-        color: white;
-        background: linear-gradient(135deg, #5d9dff, #7c6cff);
-        flex-shrink: 0;
-    }
-    .repo-label {
+    .muted {
         color: var(--muted);
-        font-size: 13px;
-        margin-bottom: 2px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-size: 0.78rem;
     }
-    .card-title {
-        font-size: 18px;
-        font-weight: 700;
-        line-height: 1.3;
+    .task-summary {
         color: var(--text);
+        line-height: 1.5;
+        margin: 12px 0 10px 0;
     }
-    .follow-btn {
-        background: rgba(255,255,255,0.06);
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        color: var(--text);
-        padding: 8px 14px;
-        font-weight: 600;
-        font-size: 13px;
-        white-space: nowrap;
-    }
-    .summary {
-        margin-top: 14px;
-        color: #f5f8fb;
-        font-size: 17px;
-        line-height: 1.45;
-    }
-    .chip-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 12px;
-    }
-    .chip {
-        background: rgba(116, 167, 255, 0.11);
+    .tag {
+        display: inline-block;
+        background: rgba(116,167,255,0.12);
         color: #dfeeff;
         border: 1px solid rgba(116,167,255,0.2);
         border-radius: 999px;
         padding: 6px 10px;
-        font-size: 13px;
+        margin: 4px 6px 0 0;
+        font-size: 0.75rem;
         font-weight: 600;
-    }
-    .meta-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-top: 16px;
-        color: var(--muted);
-        font-size: 14px;
-    }
-    .meta-left {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-    .dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        display: inline-block;
-    }
-    .detail-panel {
-        margin-top: 16px;
-        background: rgba(255,255,255,0.02);
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 18px;
-    }
-    .detail-title {
-        font-size: 20px;
-        font-weight: 700;
-        margin-bottom: 12px;
     }
     .detail-box {
         background: rgba(255,255,255,0.02);
         border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: 12px 14px;
+        border-radius: 14px;
+        padding: 14px;
         color: var(--text);
-        line-height: 1.6;
+        line-height: 1.65;
         white-space: pre-wrap;
     }
-    .bottom-nav {
-        display: flex;
-        justify-content: center;
-        gap: 18px;
-        align-items: center;
-        margin-top: 16px;
-        padding-bottom: 6px;
+    .status-pill {
+        display: inline-block;
+        background: rgba(50,213,131,0.12);
+        border: 1px solid rgba(50,213,131,0.25);
+        color: #b9f9dc;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
     }
-    .nav-btn {
-        width: 58px;
-        height: 58px;
-        border-radius: 18px;
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 6px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 12px;
+        padding: 8px 12px;
+        background: rgba(255,255,255,0.03);
         border: 1px solid var(--line);
-        background: rgba(255,255,255,0.04);
-        color: white;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
     }
-    .nav-btn.primary {
-        background: linear-gradient(135deg, #2dd4bf, #22c55e);
-        border: none;
-        color: #03150b;
-    }
-    .nav-btn.alert {
-        background: linear-gradient(135deg, #f59e0b, #f97316);
-        border: none;
+    .stButton > button {
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255,255,255,0.06);
         color: white;
     }
-    .glass {
+    .stFileUploader > div {
         background: rgba(255,255,255,0.02);
         border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 16px;
+        border-radius: 14px;
     }
-    @media (max-width: 900px) {
-        .brand-text { font-size: 24px; }
-        .card-title { font-size: 17px; }
-        .summary { font-size: 15px; }
+    @media (max-width: 768px) {
+        .app-shell { padding: 12px; }
+        .task-card { padding: 14px; }
     }
     </style>
     """,
@@ -512,15 +339,11 @@ def email_agent(task: str, context: str, language_name: str, model_name: str) ->
 
 
 def orchestrate_task(task: str, context: str, language_name: str, model_name: str) -> dict:
-    plan = planner_agent(task, context, language_name, model_name)
-    research = researcher_agent(task, context, language_name, model_name)
-    script = script_agent(task, context, language_name, model_name)
-    email = email_agent(task, context, language_name, model_name)
     return {
-        "plan": plan,
-        "research": research,
-        "script": script,
-        "email": email,
+        "plan": planner_agent(task, context, language_name, model_name),
+        "research": researcher_agent(task, context, language_name, model_name),
+        "script": script_agent(task, context, language_name, model_name),
+        "email": email_agent(task, context, language_name, model_name),
     }
 
 
@@ -542,95 +365,26 @@ with st.sidebar:
     model_name = st.selectbox("Model", GOOGLE_MODEL_CANDIDATES)
 
 
-if browser_voice:
-    speech_lang = speech_lang_code.replace("-", "-")
-    st.markdown(
-        f"""
-        <div style="margin: 0 0 14px 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-            <button id="voice-button" style="background:#1f8fff;color:#fff;border:none;padding:10px 16px;border-radius:12px;font-weight:700;cursor:pointer;">🎙️ Nói lệnh</button>
-            <span id="voice-status" style="color:#b7c6d6;font-size:14px;">Mic ready</span>
-        </div>
-        <script>
-        const button = document.getElementById('voice-button');
-        const status = document.getElementById('voice-status');
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {{
-            status.textContent = 'Mic không được hỗ trợ';
-            button.disabled = true;
-        }} else {{
-            const recognition = new SpeechRecognition();
-            recognition.lang = '{speech_lang}';
-            recognition.interimResults = false;
-            recognition.continuous = false;
-            button.addEventListener('click', () => {{
-                status.textContent = 'Đang nghe...';
-                button.textContent = '🔴 Đang nghe';
-                navigator.mediaDevices.getUserMedia({{ audio: true }})
-                    .then(() => recognition.start())
-                    .catch(() => {{
-                        status.textContent = 'Mic bị từ chối';
-                        button.textContent = '🎙️ Nói lệnh';
-                    }});
-            }});
-            recognition.onresult = (event) => {{
-                const transcript = event.results[0][0].transcript;
-                status.textContent = 'Đã nghe: ' + transcript;
-                const textareas = document.querySelectorAll('textarea');
-                const target = textareas[textareas.length - 1];
-                if (target) {{
-                    target.value = transcript;
-                    target.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                    target.focus();
-                }}
-                button.textContent = '🎙️ Nói lệnh';
-            }};
-            recognition.onerror = (event) => {{
-                status.textContent = 'Lỗi mic: ' + event.error;
-                button.textContent = '🎙️ Nói lệnh';
-            }};
-            recognition.onend = () => {{
-                button.textContent = '🎙️ Nói lệnh';
-            }};
-        }}
-        </script>
-        """,
-        unsafe_allow_html=True,
-    )
+st.markdown('<div class="app-shell">', unsafe_allow_html=True)
 
+col1, col2 = st.columns([1, 1])
+with col1:
+    st.title("No-Ron")
+with col2:
+    st.write("")
+    st.write("")
+    if browser_voice:
+        st.info("Mic đang bật — chỉ hoạt động trên trình duyệt hỗ trợ Web Speech API")
+    else:
+        st.caption("Mic đang tắt. Bạn vẫn có thể dùng text + file upload.")
 
-st.markdown(
-    """
-    <div class="topbar">
-        <div class="brand-wrap">
-            <div class="brand-icon">N</div>
-            <div class="brand-text">No-Ron</div>
-        </div>
-        <div class="toolbar">
-            <div class="toolbar-btn">↻</div>
-            <div class="toolbar-btn">◫</div>
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
+st.markdown("### Tạo task")
+
+uploaded_files = st.file_uploader(
+    "📎 Upload file (PDF, TXT, MD, CSV)",
+    accept_multiple_files=True,
+    type=["txt", "md", "csv", "pdf"],
 )
-
-st.markdown(
-    """
-    <div class="top-actions">
-        <div class="search-wrap">
-            <div class="pill">Lọc</div>
-            <div class="search-box">Khi bạn upload file hoặc nhập lệnh, task sẽ hiện ở đây</div>
-        </div>
-        <div class="toolbar-btn">⋯</div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-st.markdown('<div class="pill-row"><div class="pill">Tất cả</div><div class="pill">Đang hoạt động</div><div class="pill">Pending</div><div class="pill">Nổi bật</div></div>', unsafe_allow_html=True)
-
-
-uploaded_files = st.file_uploader("📎 Upload file (PDF, TXT, MD, CSV)", accept_multiple_files=True, type=["txt", "md", "csv", "pdf"])
 user_prompt = st.chat_input("Nhập yêu cầu hoặc nói lệnh...")
 
 if user_prompt or uploaded_files:
@@ -669,7 +423,7 @@ if user_prompt or uploaded_files:
     st.session_state.selected_task = 0
 
 if not st.session_state.tasks:
-    sample_task = {
+    st.session_state.tasks = [{
         "title": "Expensify / Ứng dụng",
         "summary": "Chào mừng đến với Expensify mới: một sự tái định hình hoàn toàn về hợp tác tài chính, tập trung vào trải nghiệm người dùng. Hãy giúp xây dựng hệ thống tiếp theo...",
         "tags": ["TypeScript", "5.1k", "AI"],
@@ -677,36 +431,28 @@ if not st.session_state.tasks:
         "repo": "Expensify",
         "type": "ứng dụng",
         "detail": "Task mẫu để mô phỏng feed. Bạn có thể nhập lệnh mới để tạo task thực tế.",
-    }
-    st.session_state.tasks = [sample_task]
+    }]
 
 for idx, task in enumerate(st.session_state.tasks):
     with st.container():
         st.markdown(
             f"""
-            <div class="feed-card">
-                <div class="feed-head">
-                    <div class="left-head">
-                        <div class="avatar">{task['repo'][0].upper()}</div>
-                        <div>
-                            <div class="repo-label">{task['repo']}</div>
-                            <div class="card-title">{task['title']}</div>
-                        </div>
-                    </div>
-                    <button class="follow-btn">{task['status']}</button>
-                </div>
-                <div class="summary">{task['summary']}</div>
-                <div class="chip-row">
-                    {''.join(f'<div class="chip">{tag}</div>' for tag in task['tags'])}
-                </div>
-                <div class="meta-row">
-                    <div class="meta-left">
-                        <span><span class="dot" style="background: #2ed573;"></span> {task['type']}</span>
-                        <span>•</span>
-                        <span>{task['status']}</span>
-                    </div>
+            <div class="task-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
                     <div>
-                        <button class="follow-btn" style="background: rgba(50,213,131,0.12); border-color: rgba(50,213,131,0.25);">Xem chi tiết</button>
+                        <div class="muted">{task['repo']}</div>
+                        <h3>{task['title']}</h3>
+                    </div>
+                    <span class="status-pill">{task['status']}</span>
+                </div>
+                <div class="task-summary">{task['summary']}</div>
+                <div>
+                    {''.join(f'<span class="tag">{tag}</span>' for tag in task['tags'])}
+                </div>
+                <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <div class="muted">{task['type']}</div>
+                    <div>
+                        <button type="button" onclick="document.querySelector('button[kind=primary]').click();">Xem chi tiết</button>
                     </div>
                 </div>
             </div>
@@ -719,36 +465,16 @@ for idx, task in enumerate(st.session_state.tasks):
 
         if idx == st.session_state.selected_task:
             detail = st.session_state.tasks[idx].get("detail", "Chưa có nội dung chi tiết.")
-            st.markdown(
-                """
-                <div class="detail-panel">
-                    <div class="detail-title">Chi tiết task</div>
-                    <div class="detail-box">""" + detail + """</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            st.markdown(f"### Chi tiết task\n\n<div class='detail-box'>{detail}</div>", unsafe_allow_html=True)
 
-st.markdown(
-    """
-    <div class="bottom-nav">
-        <div class="nav-btn">←</div>
-        <div class="nav-btn primary">＋</div>
-        <div class="nav-btn alert">4</div>
-        <div class="nav-btn">⋯</div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+st.markdown('</div>', unsafe_allow_html=True)
 
-# Append chat transcript for visibility
-st.markdown("<br>", unsafe_allow_html=True)
+# visible chat area for context
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
 if user_prompt or uploaded_files:
-    st.caption("Note: Mic hỗ trợ trên Chrome nhưng app vẫn hoạt động bình thường bằng text + file upload.")
     if voice_enabled:
         final_text = (
             "### Kế hoạch\n"
