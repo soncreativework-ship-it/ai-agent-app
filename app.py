@@ -150,6 +150,26 @@ def get_api_key():
     return st.secrets.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
 
 
+def resolve_best_available_model():
+    api_key = get_api_key()
+    if not api_key:
+        return GOOGLE_MODEL_CANDIDATES[0]
+
+    try:
+        genai.configure(api_key=api_key)
+    except Exception:
+        return GOOGLE_MODEL_CANDIDATES[0]
+
+    for model_name in GOOGLE_MODEL_CANDIDATES:
+        try:
+            model = genai.GenerativeModel(model_name)
+            model.generate_content("Reply with OK")
+            return model_name
+        except Exception:
+            continue
+    return GOOGLE_MODEL_CANDIDATES[0]
+
+
 def compatible_model_sequence(selected_model: str):
     ordered = []
     seen = set()
@@ -368,7 +388,11 @@ with st.sidebar:
     selected_lang_name, gtts_lang_code, speech_lang_code = language_option
     voice_enabled = st.toggle("TTS", value=True)
     browser_voice = st.toggle("Mic web (Chrome)", value=False)
-    model_name = st.selectbox("Model", GOOGLE_MODEL_CANDIDATES)
+
+    model_options = ["Auto (best available)"] + GOOGLE_MODEL_CANDIDATES
+    selected_model_option = st.selectbox("Model", model_options)
+    model_name = resolve_best_available_model() if selected_model_option == "Auto (best available)" else selected_model_option
+    st.caption(f"Using model: {model_name}")
 
 
 st.markdown('<div class="app-shell">', unsafe_allow_html=True)
