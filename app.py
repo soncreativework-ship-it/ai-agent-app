@@ -11,12 +11,12 @@ try:
 except Exception:
     PdfReader = None
 
-DEFAULT_MODEL_CANDIDATES = [
+GOOGLE_MODEL_CANDIDATES = [
     "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
     "gemini-2.5-flash",
     "gemini-1.5-flash",
     "gemini-1.5-pro",
-    "gemini-2.0-flash-lite",
 ]
 
 st.set_page_config(
@@ -326,11 +326,11 @@ def get_api_key():
 def compatible_model_sequence(selected_model: str):
     ordered = []
     seen = set()
-    for m in [selected_model] + DEFAULT_MODEL_CANDIDATES:
-        label = (m or "").strip()
-        if label and label not in seen:
-            ordered.append(label)
-            seen.add(label)
+    for model_name in [selected_model] + GOOGLE_MODEL_CANDIDATES:
+        value = (model_name or "").strip()
+        if value and value not in seen:
+            ordered.append(value)
+            seen.add(value)
     return ordered
 
 
@@ -349,20 +349,21 @@ def call_gemini(prompt: str, selected_model: str) -> str:
         try:
             model = genai.GenerativeModel(model_name)
             response = model.generate_content(prompt)
-            if not getattr(response, "text", None):
+            text = getattr(response, "text", None)
+            if not text:
                 raise ValueError("empty response")
-            return response.text.strip()
+            return text.strip()
         except Exception as e:
             last_error = e
-            msg = str(e).lower()
-            if "404" in msg or "not found" in msg or "unsupported" in msg or "does not exist" in msg:
+            message = str(e).lower()
+            if "404" in message or "not found" in message or "unsupported" in message or "does not exist" in message:
                 continue
             return f"No-Ron AI gặp lỗi khi gọi Gemini: {str(e)}"
 
     if last_error is not None:
         return (
             "No-Ron AI không tìm thấy model Gemini phù hợp trong tài khoản của bạn. "
-            "Hãy đổi sang một model đang được hỗ trợ trong tài khoản Google AI Studio của bạn. "
+            "Hãy chọn một model có sẵn trong Google AI Studio / Gemini API của bạn. "
             f"Lỗi cuối cùng: {str(last_error)}"
         )
 
@@ -401,7 +402,7 @@ def planner_agent(task: str, context: str, language_name: str, model_name: str) 
         prompt = f"""
         Bạn là Planner Agent. Hãy phân tích nhiệm vụ sau và trả về kế hoạch rõ ràng:
         1. Mục tiêu
-        2. Các bư���c triển khai
+        2. Các bước triển khai
         3. Thời gian gợi ý
         4. Kết quả đầu ra
 
@@ -538,13 +539,13 @@ with st.sidebar:
     selected_lang_name, gtts_lang_code, speech_lang_code = language_option
     voice_enabled = st.toggle("TTS", value=True)
     browser_voice = st.toggle("Mic web (Chrome)", value=False)
-    model_name = st.selectbox("Model", DEFAULT_MODEL_CANDIDATES)
+    model_name = st.selectbox("Model", GOOGLE_MODEL_CANDIDATES)
 
 
-# Optional mic UI only when enabled
 if browser_voice:
+    speech_lang = speech_lang_code.replace("-", "-")
     st.markdown(
-        """
+        f"""
         <div style="margin: 0 0 14px 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <button id="voice-button" style="background:#1f8fff;color:#fff;border:none;padding:10px 16px;border-radius:12px;font-weight:700;cursor:pointer;">🎙️ Nói lệnh</button>
             <span id="voice-status" style="color:#b7c6d6;font-size:14px;">Mic ready</span>
@@ -553,44 +554,44 @@ if browser_voice:
         const button = document.getElementById('voice-button');
         const status = document.getElementById('voice-status');
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
+        if (!SpeechRecognition) {{
             status.textContent = 'Mic không được hỗ trợ';
             button.disabled = true;
-        } else {
+        }} else {{
             const recognition = new SpeechRecognition();
-            recognition.lang = '""" + speech_lang_code + """';
+            recognition.lang = '{speech_lang}';
             recognition.interimResults = false;
             recognition.continuous = false;
-            button.addEventListener('click', () => {
+            button.addEventListener('click', () => {{
                 status.textContent = 'Đang nghe...';
                 button.textContent = '🔴 Đang nghe';
-                navigator.mediaDevices.getUserMedia({ audio: true })
+                navigator.mediaDevices.getUserMedia({{ audio: true }})
                     .then(() => recognition.start())
-                    .catch(() => {
+                    .catch(() => {{
                         status.textContent = 'Mic bị từ chối';
                         button.textContent = '🎙️ Nói lệnh';
-                    });
-            });
-            recognition.onresult = (event) => {
+                    }});
+            }});
+            recognition.onresult = (event) => {{
                 const transcript = event.results[0][0].transcript;
                 status.textContent = 'Đã nghe: ' + transcript;
                 const textareas = document.querySelectorAll('textarea');
                 const target = textareas[textareas.length - 1];
-                if (target) {
+                if (target) {{
                     target.value = transcript;
-                    target.dispatchEvent(new Event('input', { bubbles: true }));
+                    target.dispatchEvent(new Event('input', {{ bubbles: true }}));
                     target.focus();
-                }
+                }}
                 button.textContent = '🎙️ Nói lệnh';
-            };
-            recognition.onerror = (event) => {
+            }};
+            recognition.onerror = (event) => {{
                 status.textContent = 'Lỗi mic: ' + event.error;
                 button.textContent = '🎙️ Nói lệnh';
-            };
-            recognition.onend = () => {
+            }};
+            recognition.onend = () => {{
                 button.textContent = '🎙️ Nói lệnh';
-            };
-        }
+            }};
+        }}
         </script>
         """,
         unsafe_allow_html=True,
