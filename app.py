@@ -301,7 +301,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "tasks" not in st.session_state:
@@ -500,17 +499,17 @@ with st.sidebar:
     )
     selected_lang_name, gtts_lang_code, speech_lang_code = language_option
     voice_enabled = st.toggle("TTS", value=True)
-    browser_voice = st.toggle("Mic web (Chrome)", value=True)
+    browser_voice = st.toggle("Mic web (Chrome)", value=False)
     model_name = st.selectbox("Model", ["gemini-1.5-flash", "gemini-1.5-pro"])
 
 
-# voice widget
+# Optional mic UI only when enabled
 if browser_voice:
     st.markdown(
         """
         <div style="margin: 0 0 14px 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <button id="voice-button" style="background:#1f8fff;color:#fff;border:none;padding:10px 16px;border-radius:12px;font-weight:700;cursor:pointer;">🎙️ Nói lệnh</button>
-            <span id="voice-status" style="color:#b7c6d6;font-size:14px;">Chrome mic ready</span>
+            <span id="voice-status" style="color:#b7c6d6;font-size:14px;">Mic ready</span>
         </div>
         <script>
         const button = document.getElementById('voice-button');
@@ -560,7 +559,6 @@ if browser_voice:
     )
 
 
-# header
 st.markdown(
     """
     <div class="topbar">
@@ -631,7 +629,6 @@ if user_prompt or uploaded_files:
     st.session_state.tasks.insert(0, new_task)
     st.session_state.selected_task = 0
 
-# render feed cards
 if not st.session_state.tasks:
     sample_task = {
         "title": "Expensify / Ứng dụng",
@@ -693,7 +690,6 @@ for idx, task in enumerate(st.session_state.tasks):
                 unsafe_allow_html=True,
             )
 
-# bottom nav
 st.markdown(
     """
     <div class="bottom-nav">
@@ -706,15 +702,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# explicit task detail fallback if selected task exists
-if st.session_state.tasks:
-    sel = st.session_state.selected_task if st.session_state.selected_task < len(st.session_state.tasks) else 0
-    selected_task = st.session_state.tasks[sel]
-    if "detail" in selected_task:
-        st.markdown("<div class='glass'><div class='detail-title'>Task detail preview</div></div>", unsafe_allow_html=True)
-        st.code(selected_task["detail"][:4000], language="text")
-
-# extra visible chat area at the bottom to keep the app interactive
+# Append chat transcript for visibility
 st.markdown("<br>", unsafe_allow_html=True)
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
