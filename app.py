@@ -172,7 +172,9 @@ def call_gemini(prompt: str, selected_model: str) -> str:
     genai.configure(api_key=api_key)
 
     last_error = None
+    debug_messages = []
     for model_name in compatible_model_sequence(selected_model):
+        debug_messages.append(f"Trying model: {model_name}")
         try:
             model = genai.GenerativeModel(model_name)
             response = model.generate_content(prompt)
@@ -182,16 +184,20 @@ def call_gemini(prompt: str, selected_model: str) -> str:
             return text.strip()
         except Exception as e:
             last_error = e
-            message = str(e).lower()
-            if "404" in message or "not found" in message or "unsupported" in message or "does not exist" in message:
+            msg = str(e).lower()
+            debug_messages.append(f"Failed model {model_name}: {str(e)}")
+            if "404" in msg or "not found" in msg or "unsupported" in msg or "does not exist" in msg:
                 continue
-            return f"No-Ron AI gặp lỗi khi gọi Gemini: {str(e)}"
+            return (
+                f"No-Ron AI gặp lỗi khi gọi Gemini: {str(e)}\n\n"
+                + "\n".join(debug_messages)
+            )
 
     if last_error is not None:
         return (
             "No-Ron AI không tìm thấy model Gemini phù hợp trong tài khoản của bạn. "
             "Hãy chọn một model có sẵn trong Google AI Studio / Gemini API của bạn. "
-            f"Lỗi cuối cùng: {str(last_error)}"
+            f"Lỗi cuối cùng: {str(last_error)}\n\n" + "\n".join(debug_messages)
         )
 
     return "No-Ron AI không thể kết nối đến Gemini sau khi thử nhiều model khác nhau."
@@ -452,7 +458,7 @@ for idx, task in enumerate(st.session_state.tasks):
                 <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
                     <div class="muted">{task['type']}</div>
                     <div>
-                        <button type="button" onclick="document.querySelector('button[kind=primary]').click();">Xem chi tiết</button>
+                        <button type="button">Xem chi tiết</button>
                     </div>
                 </div>
             </div>
@@ -469,7 +475,6 @@ for idx, task in enumerate(st.session_state.tasks):
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# visible chat area for context
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
