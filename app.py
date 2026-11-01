@@ -30,7 +30,7 @@ st.markdown(
     """
     <style>
     :root {
-        --bg0: #0b1117;
+        --bg0: #0c141b;
         --bg1: #111b25;
         --bg2: #1a2430;
         --card: #172430;
@@ -43,93 +43,199 @@ st.markdown(
         --red: #ff6b6b;
     }
     html, body {
-        background: linear-gradient(180deg, #0b1117 0%, #0f1720 100%);
+        background: #0b1117;
         color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     .stApp {
         background: linear-gradient(180deg, #0b1117 0%, #0f1720 100%);
     }
-    .app-shell {
-        background: rgba(255,255,255,0.02);
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 16px 18px 8px 18px;
+    .mobile-shell {
+        max-width: 460px;
+        margin: 0 auto;
+        background: #0d1a22;
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 26px;
+        overflow: hidden;
+        min-height: calc(100vh - 12px);
     }
-    .task-card {
-        background: linear-gradient(180deg, rgba(23,36,48,0.9), rgba(18,28,38,0.96));
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 16px;
-        margin-bottom: 16px;
-        box-shadow: 0 10px 18px rgba(0,0,0,0.18);
+    .status-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px 8px 18px;
+        color: #f0f5fb;
+        font-size: 0.9rem;
+        letter-spacing: 0.02em;
     }
-    .task-card h3 {
-        margin: 0 0 8px 0;
+    .status-icons {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.95rem;
+        opacity: 0.9;
+    }
+    .url-bar {
+        margin: 0 12px 8px 12px;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 999px;
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
         color: var(--text);
+    }
+    .url-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #4f9dfd, #3ce0c2);
+        font-weight: 700;
+        color: #08131a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+    }
+    .url-text {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #dfeaf6;
+        font-size: 0.95rem;
+    }
+    .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px 8px 14px;
+        color: #edf3f8;
+        font-weight: 600;
+    }
+    .toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 18px;
         font-size: 1.2rem;
     }
-    .muted {
-        color: var(--muted);
-        font-size: 0.78rem;
+    .chat-panel {
+        padding: 14px 14px 0 14px;
+        min-height: 420px;
     }
-    .task-summary {
-        color: var(--text);
-        line-height: 1.5;
-        margin: 12px 0 10px 0;
-    }
-    .tag {
-        display: inline-block;
-        background: rgba(116,167,255,0.12);
-        color: #dfeeff;
-        border: 1px solid rgba(116,167,255,0.2);
-        border-radius: 999px;
-        padding: 6px 10px;
-        margin: 4px 6px 0 0;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-    .detail-box {
+    .message {
         background: rgba(255,255,255,0.02);
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 14px;
-        color: var(--text);
-        line-height: 1.65;
-        white-space: pre-wrap;
-    }
-    .status-pill {
-        display: inline-block;
-        background: rgba(50,213,131,0.12);
-        border: 1px solid rgba(50,213,131,0.25);
-        color: #b9f9dc;
-        border-radius: 999px;
-        padding: 6px 10px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 6px;
-    }
-    .stTabs [data-baseweb="tab"] {
+        border: 1px solid rgba(255,255,255,0.04);
         border-radius: 12px;
-        padding: 8px 12px;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid var(--line);
+        padding: 16px 14px;
+        color: #edf3f8;
+        line-height: 1.6;
+        margin-bottom: 14px;
+        white-space: pre-wrap;
+        font-size: 0.96rem;
     }
-    .stButton > button {
-        border-radius: 999px;
-        border: 1px solid var(--line);
+    .message strong {
+        color: #7ac3ff;
+    }
+    .message .model-line {
+        color: #7bd5ff;
+        font-weight: 600;
+    }
+    .composer {
+        position: sticky;
+        bottom: 0;
+        padding: 12px 14px 16px 14px;
+        background: rgba(13, 26, 34, 0.96);
+        border-top: 1px solid rgba(255,255,255,0.04);
+    }
+    .composer-inner {
+        display: flex;
+        align-items: center;
+        gap: 10px;
         background: rgba(255,255,255,0.06);
-        color: white;
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 999px;
+        padding: 8px 10px 8px 18px;
     }
-    .stFileUploader > div {
-        background: rgba(255,255,255,0.02);
-        border: 1px solid var(--line);
-        border-radius: 14px;
+    .composer input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        color: var(--text);
+        font-size: 1rem;
+        outline: none;
+    }
+    .composer input::placeholder {
+        color: rgba(255,255,255,0.55);
+    }
+    .send-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #7ac7ff, #4f9dfd);
+        color: #07151b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+    }
+    .bottom-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 18px 14px 18px;
+        background: rgba(12,20,27,0.92);
+        border-top: 1px solid rgba(255,255,255,0.04);
+        color: #eaf3ff;
+    }
+    .nav-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        color: #edf3f8;
+        font-size: 1.15rem;
+        opacity: 0.9;
+    }
+    .nav-center {
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 300;
+    }
+    .badge {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.14);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.76rem;
+        font-weight: 700;
+    }
+    .app-shell {
+        display: none;
     }
     @media (max-width: 768px) {
-        .app-shell { padding: 12px; }
-        .task-card { padding: 14px; }
+        .app-shell { display: block; }
     }
     </style>
     """,
@@ -138,12 +244,8 @@ st.markdown(
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
-if "tasks" not in st.session_state:
-    st.session_state.tasks = []
-if "agent_outputs" not in st.session_state:
-    st.session_state.agent_outputs = {}
-if "selected_task" not in st.session_state:
-    st.session_state.selected_task = 0
+if "prompt_history" not in st.session_state:
+    st.session_state.prompt_history = []
 
 
 def get_api_key():
@@ -176,9 +278,6 @@ def resolve_best_available_model():
             if candidate in available:
                 return candidate
         return available[0]
-
-    for candidate in FALLBACK_MODELS:
-        return candidate
     return "gemini-2.5-flash"
 
 
@@ -197,14 +296,13 @@ def call_gemini(prompt: str, selected_model: str) -> str:
     api_key = get_api_key()
     if not api_key:
         return (
-            "Chưa có API key Google Gemini. Vui lòng thêm GEMINI_API_KEY vào Streamlit Secrets hoặc biến môi trường. "
-            "Bạn vẫn có thể tiếp tục dùng text input để làm việc với hệ thống."
+            "Chưa có API key Google Gemini. Vui lòng thêm GEMINI_API_KEY vào Streamlit Secrets hoặc biến môi trường."
         )
 
     genai.configure(api_key=api_key)
-
-    last_error = None
     debug_messages = []
+    last_error = None
+
     for model_name in compatible_model_sequence(selected_model):
         debug_messages.append(f"Trying model: {model_name}")
         try:
@@ -228,26 +326,11 @@ def call_gemini(prompt: str, selected_model: str) -> str:
     if last_error is not None:
         return (
             "No-Ron AI không tìm thấy model Gemini phù hợp trong tài khoản của bạn. "
-            "Hãy chọn một model có sẵn trong Google AI Studio / Gemini API của bạn. "
-            f"Lỗi cuối cùng: {str(last_error)}\n\n" + "\n".join(debug_messages)
+            "Hãy chọn một model có sẵn trong Google AI Studio / Gemini API của bạn.\n\n"
+            + "\n".join(debug_messages)
         )
 
     return "No-Ron AI không thể kết nối đến Gemini sau khi thử nhiều model khác nhau."
-
-
-def extract_text_from_uploaded_file(file_obj):
-    name = (file_obj.name or "").lower()
-    try:
-        if name.endswith(".pdf"):
-            if PdfReader is None:
-                return "[PDF không thể đọc vì thư viện PyPDF chưa có trong môi trường.]"
-            reader = PdfReader(file_obj)
-            pages = [page.extract_text() or "" for page in reader.pages]
-            return "\n".join(pages)
-        raw = file_obj.read()
-        return raw.decode("utf-8", errors="ignore")
-    except Exception as e:
-        return f"[Không thể đọc file: {e}]"
 
 
 def text_to_audio_html(text: str, lang_code: str):
@@ -260,129 +343,6 @@ def text_to_audio_html(text: str, lang_code: str):
         return f"<audio autoplay><source src='data:audio/mp3;base64,{b64}' type='audio/mp3'></audio>"
     except Exception:
         return ""
-
-
-def planner_agent(task: str, context: str, language_name: str, model_name: str) -> str:
-    if language_name == "Tiếng Việt":
-        prompt = f"""
-        Bạn là Planner Agent. Hãy phân tích nhiệm vụ sau và trả về kế hoạch rõ ràng:
-        1. Mục tiêu
-        2. Các bước triển khai
-        3. Thời gian gợi ý
-        4. Kết quả đầu ra
-
-        Context:
-        {context}
-
-        Nhiệm vụ: {task}
-        """
-    else:
-        prompt = f"""
-        You are the Planner Agent. Analyze the task and plan execution.
-        1. Goal
-        2. Steps
-        3. Timeline
-        4. Outcome
-
-        Context:
-        {context}
-
-        Task: {task}
-        """
-    return call_gemini(prompt, model_name)
-
-
-def researcher_agent(task: str, context: str, language_name: str, model_name: str) -> str:
-    if language_name == "Tiếng Việt":
-        prompt = f"""
-        Bạn là Research Agent. Hãy đưa ra góc nhìn chiến lược cho nhiệm vụ sau:
-        - đối tượng mục tiêu
-        - xu hướng thị trường
-        - từ khóa và hướng đi
-        - đối thủ và phân biệt hóa
-        - rủi ro
-
-        Context:
-        {context}
-
-        Nhiệm vụ: {task}
-        """
-    else:
-        prompt = f"""
-        You are the Research Agent. Provide strategic analysis for:
-        - target audience
-        - market trends
-        - keywords
-        - differentiated opportunities
-        - risks
-
-        Context:
-        {context}
-
-        Task: {task}
-        """
-    return call_gemini(prompt, model_name)
-
-
-def script_agent(task: str, context: str, language_name: str, model_name: str) -> str:
-    if language_name == "Tiếng Việt":
-        prompt = f"""
-        Bạn là Script Agent. Viết kịch bản quảng cáo/video cho nhiệm vụ sau.
-        Yêu cầu:
-        - hook mạnh
-        - câu chuyện rõ
-        - CTA rõ
-        - ngắn gọn và có thể thực thi
-
-        Context:
-        {context}
-
-        Nhiệm vụ: {task}
-        """
-    else:
-        prompt = f"""
-        You are the Script Agent. Write a short marketing or video script.
-        Include hook, story, CTA, clarity, concise execution.
-
-        Context:
-        {context}
-
-        Task: {task}
-        """
-    return call_gemini(prompt, model_name)
-
-
-def email_agent(task: str, context: str, language_name: str, model_name: str) -> str:
-    if language_name == "Tiếng Việt":
-        prompt = f"""
-        Bạn là Email Agent. Viết email ngắn, chuyên nghiệp, có tính hành động cho nhiệm vụ sau.
-        Có: subject, greeting, body, CTA.
-
-        Context:
-        {context}
-
-        Nhiệm vụ: {task}
-        """
-    else:
-        prompt = f"""
-        You are the Email Agent. Draft a concise professional email for this task.
-        Include: subject, greeting, body, CTA.
-
-        Context:
-        {context}
-
-        Task: {task}
-        """
-    return call_gemini(prompt, model_name)
-
-
-def orchestrate_task(task: str, context: str, language_name: str, model_name: str) -> dict:
-    return {
-        "plan": planner_agent(task, context, language_name, model_name),
-        "research": researcher_agent(task, context, language_name, model_name),
-        "script": script_agent(task, context, language_name, model_name),
-        "email": email_agent(task, context, language_name, model_name),
-    }
 
 
 with st.sidebar:
@@ -399,134 +359,99 @@ with st.sidebar:
     )
     selected_lang_name, gtts_lang_code, speech_lang_code = language_option
     voice_enabled = st.toggle("TTS", value=True)
-    browser_voice = st.toggle("Mic web (Chrome)", value=False)
 
-    model_options = ["Auto (best available)"] + FALLBACK_MODELS
-    selected_model_option = st.selectbox("Model", model_options)
+    selected_model_option = st.selectbox(
+        "Model",
+        ["Auto (best available)"] + FALLBACK_MODELS,
+    )
     model_name = resolve_best_available_model() if selected_model_option == "Auto (best available)" else selected_model_option
     st.caption(f"Using model: {model_name}")
 
 
-st.markdown('<div class="app-shell">', unsafe_allow_html=True)
+mobile_container = st.container()
 
-col1, col2 = st.columns([1, 1])
-with col1:
-    st.title("No-Ron")
-with col2:
-    st.write("")
-    st.write("")
-    if browser_voice:
-        st.info("Mic đang bật — chỉ hoạt động trên trình duyệt hỗ trợ Web Speech API")
+with mobile_container:
+    st.markdown('<div class="mobile-shell">', unsafe_allow_html=True)
+
+    st.markdown(
+        """
+        <div class="status-bar">
+            <div>02:11</div>
+            <div class="status-icons">◔◷◍</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
+        <div class="url-bar">
+            <div class="url-icon">G</div>
+            <div class="url-text">...j5yfabpfgjw7ecg7zc4ti.streamlit.app</div>
+            <div>⤴</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
+        <div class="toolbar">
+            <div class="toolbar-left">»</div>
+            <div class="toolbar-right">
+                <span>Share</span>
+                <span>☆</span>
+                <span>✎</span>
+                <span>⋮</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown('<div class="chat-panel">', unsafe_allow_html=True)
+    if st.session_state.messages:
+        for msg in st.session_state.messages:
+            st.markdown(f"<div class='message'>{msg['content']}</div>", unsafe_allow_html=True)
     else:
-        st.caption("Mic đang tắt. Bạn vẫn có thể dùng text + file upload.")
-
-st.markdown("### Tạo task")
-
-uploaded_files = st.file_uploader(
-    "📎 Upload file (PDF, TXT, MD, CSV)",
-    accept_multiple_files=True,
-    type=["txt", "md", "csv", "pdf"],
-)
-user_prompt = st.chat_input("Nhập yêu cầu hoặc nói lệnh...")
-
-if user_prompt or uploaded_files:
-    context_chunks = []
-    if uploaded_files:
-        for f in uploaded_files:
-            context_chunks.append(f"### File: {f.name}\n{extract_text_from_uploaded_file(f)}")
-    combined_context = "\n\n".join(context_chunks) if context_chunks else "Không có file đính kèm."
-    task_text = user_prompt or "Tổng hợp file đính kèm và đưa ra kế hoạch xử lý."
-
-    with st.spinner("No-Ron đang điều phối task cho Planner / Research / Script / Email..."):
-        result = orchestrate_task(task_text, combined_context, selected_lang_name, model_name)
-
-    st.session_state.messages.append({"role": "user", "content": task_text})
-    st.session_state.agent_outputs[task_text] = result
-    task_summary = (result["plan"][:180] + "...") if len(result["plan"]) > 180 else result["plan"]
-    new_task = {
-        "title": task_text[:70] + ("..." if len(task_text) > 70 else ""),
-        "summary": task_summary,
-        "tags": ["Research", "Script", "Email", "Task"],
-        "status": "Đã phân phối",
-        "repo": "No-Ron Studio",
-        "type": "AI Workflow",
-        "detail": (
-            "### Kế hoạch\n"
-            f"{result['plan']}\n\n"
-            "### Nghiên cứu\n"
-            f"{result['research']}\n\n"
-            "### Kịch bản\n"
-            f"{result['script']}\n\n"
-            "### Email\n"
-            f"{result['email']}"
-        ),
-    }
-    st.session_state.tasks.insert(0, new_task)
-    st.session_state.selected_task = 0
-
-if not st.session_state.tasks:
-    st.session_state.tasks = [{
-        "title": "Expensify / Ứng dụng",
-        "summary": "Chào mừng đến với Expensify mới: một sự tái định hình hoàn toàn về hợp tác tài chính, tập trung vào trải nghiệm người dùng. Hãy giúp xây dựng hệ thống tiếp theo...",
-        "tags": ["TypeScript", "5.1k", "AI"],
-        "status": "Nổi bật",
-        "repo": "Expensify",
-        "type": "ứng dụng",
-        "detail": "Task mẫu để mô phỏng feed. Bạn có thể nhập lệnh mới để tạo task thực tế.",
-    }]
-
-for idx, task in enumerate(st.session_state.tasks):
-    with st.container():
         st.markdown(
-            f"""
-            <div class="task-card">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
-                    <div>
-                        <div class="muted">{task['repo']}</div>
-                        <h3>{task['title']}</h3>
-                    </div>
-                    <span class="status-pill">{task['status']}</span>
-                </div>
-                <div class="task-summary">{task['summary']}</div>
-                <div>
-                    {''.join(f'<span class="tag">{tag}</span>' for tag in task['tags'])}
-                </div>
-                <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
-                    <div class="muted">{task['type']}</div>
-                    <div>
-                        <button type="button">Xem chi tiết</button>
-                    </div>
-                </div>
+            """
+            <div class='message'>
+            <strong>No-Ron AI</strong> đang sẵn sàng.<br><br>
+            Nếu bạn tiếp tục nhập lệnh, tôi sẽ phân tích nhiệm vụ, nghiên cứu, viết kịch bản và email cho bạn.
             </div>
             """,
             unsafe_allow_html=True,
         )
+    st.markdown('</div>', unsafe_allow_html=True)
 
-        if st.button(f"Mở task #{idx + 1}", key=f"open_{idx}"):
-            st.session_state.selected_task = idx
+    prompt = st.text_input("", key="prompt_input_mobile", label_visibility="collapsed", placeholder="Nhập yêu cầu hoặc nói lệnh...")
 
-        if idx == st.session_state.selected_task:
-            detail = st.session_state.tasks[idx].get("detail", "Chưa có nội dung chi tiết.")
-            st.markdown(f"### Chi tiết task\n\n<div class='detail-box'>{detail}</div>", unsafe_allow_html=True)
+    if st.button("Gửi", key="send_mobile", help="Gửi nhiệm vụ", use_container_width=False):
+        if prompt and prompt.strip():
+            st.session_state.prompt_history.append(prompt)
+            st.session_state.messages.append({"role": "user", "content": prompt})
 
-st.markdown('</div>', unsafe_allow_html=True)
+            result = call_gemini(
+                f"Bạn là Trợ lý AI trong ứng dụng No-Ron. Hãy xử lý yêu cầu sau: {prompt}",
+                model_name,
+            )
+            st.session_state.messages.append({"role": "assistant", "content": result})
+            st.rerun()
 
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+    st.markdown(
+        """
+        <div class="bottom-nav">
+            <div class="nav-item">←</div>
+            <div class="nav-item">→</div>
+            <div class="nav-center">＋</div>
+            <div class="nav-item"><span class="badge">6</span></div>
+            <div class="nav-item">⋯</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-if user_prompt or uploaded_files:
-    if voice_enabled:
-        final_text = (
-            "### Kế hoạch\n"
-            f"{st.session_state.agent_outputs.get(user_prompt or 'uploaded_files', {}).get('plan', '')}\n\n"
-            "### Nghiên cứu\n"
-            f"{st.session_state.agent_outputs.get(user_prompt or 'uploaded_files', {}).get('research', '')}\n\n"
-            "### Kịch bản\n"
-            f"{st.session_state.agent_outputs.get(user_prompt or 'uploaded_files', {}).get('script', '')}\n\n"
-            "### Email\n"
-            f"{st.session_state.agent_outputs.get(user_prompt or 'uploaded_files', {}).get('email', '')}"
-        )
-        audio_html = text_to_audio_html(final_text, gtts_lang_code)
-        if audio_html:
-            st.components.v1.html(audio_html, height=0, width=0)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+st.caption("Debug: model đang dùng = " + model_name)
